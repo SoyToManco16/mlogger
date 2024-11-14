@@ -1,0 +1,57 @@
+Toda la información de mlogger.
+Derechos reservados a mi persona.
+MLOGGER
+Proyecto realizado por SoyToManco16
+
+Introducción.
+Mlogger es un servicio creado por mi el cual ejecuta un script que he desarrollado para monitorear distintos eventos, registros y el seguimiento continuado de recursos importantes del sistema como el uso de la CPU o la memoria RAM.
+
+¿Cómo monitorea mlogger el sistema?
+Mlogger se basa en un abanico de prioridades a la hora de monitorear distintos eventos o recursos del sistema.
+Existen prioridades altas, medias y bajas y a parte prioridades opcionales.
+
+PRIORIDAD ALTA: 
+Uso de la CPU.
+Uso de la Memoria RAM (MiB Mem).
+Espacio en disco.
+Servicios críticos.
+Supervisión de logs del sistema como (syslog, dmesg, audit.log…).
+
+PRIORIDAD MEDIA:
+Uso de la SWAP.
+Carga del sistema (Falta de recursos con visión a futuro).
+Uso de la RED.
+Estado de servicios SECUNDARIOS.
+
+PRIORIDAD BAJA:
+Temperatura del sistema.
+Estado de backups.
+Integridad de los archivos.
+Monitoreo de usuarios conectados y sesiones abiertas.
+
+PRIORIDAD OPCIONAL:
+Conexiones entrantes y salientes.
+Actualizaciones del sistema.
+Latencia de red y pérdida de paquetes.
+Integridad del sistema de archivos.
+Errores de hardware (Discos y Memoria).
+
+
+
+
+
+
+¿Cómo funciona el script?
+El script implementado para mlogger ejecuta funciones de monitoreo de manera continua utilizando temporizadores, capturando tanto eventos críticos como eventos de menor prioridad. Además, el script evalúa la carga de recursos del sistema, utilizando herramientas como top para analizar el rendimiento y el uso de recursos en tiempo real.
+
+¿Cómo implementamos el servicio en el SO?
+En el zip donde viene el script mlogger.sh viene otro script de instalación que debemos de ejecutar como root para su correcto funcionamiento, este moverá el script a /usr/local/bin y creará el fichero con el servicio que implementará en /etc/systemd/system y habilitará para que se inicie siempre que encendamos nuestro sistema.
+
+Para la correcta ejecución:
+Descomprimir el .zip en una carpeta.
+Nos situamos en la carpeta con cd /ruta/a/carpeta.
+Como root, chmod +x instmlogger.sh
+Lo ejecutamos ./instmlogger.sh
+
+¿Y qué pasaría si queremos eliminar mlogger de nuestro sistema?
+Si queremos eliminar por completo mlogger del sistema, tenemos otro archivo en el .zip llamado “uninstmlogger.sh”, a el igual que el instalador, solo debemos de seguir los mismos pasos pero con este archivo, esto borrará el script del sistema, eliminará el servicio (deteniendolo primeramente) y solo nos dejará el registro mlog (como recuerdo) en la carpeta /var/log.
