@@ -70,6 +70,7 @@ declare -A logfiles=(
     ["/var/log/apache2/error.log"]="error",
     ["/var/log/cron.log"]="error",
     ["/var/log/boot.log"]="error",
+    ["/var/log/dmesg"]="*error*"
 )
 
 
