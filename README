@@ -1,7 +1,5 @@
-Toda la información de mlogger.
-Derechos reservados a mi persona.
 MLOGGER
-Proyecto realizado por SoyToManco16
+Proyecto realizado por MIGUEL HERNÁNDEZ ANDREU
 
 Introducción.
 Mlogger es un servicio creado por mi el cual ejecuta un script que he desarrollado para monitorear distintos eventos, registros y el seguimiento continuado de recursos importantes del sistema como el uso de la CPU o la memoria RAM.
@@ -10,31 +8,31 @@ Mlogger es un servicio creado por mi el cual ejecuta un script que he desarrolla
 Mlogger se basa en un abanico de prioridades a la hora de monitorear distintos eventos o recursos del sistema.
 Existen prioridades altas, medias y bajas y a parte prioridades opcionales.
 
-PRIORIDAD ALTA: 
-Uso de la CPU.
-Uso de la Memoria RAM (MiB Mem).
-Espacio en disco.
-Servicios críticos.
-Supervisión de logs del sistema como (syslog, dmesg, audit.log…).
+Crítica
+Disponibilidad del Servidor: Para comprobar la disponibilidad del servidor, mlogger se encarga de hacer pings a un DNS de google para verificar que tiene conexión a internet, también realiza un escaneado de puertos cada 15 minutos para ver si es accesible y desde donde.
+Estado del Sistema de Archivos: Asegúrate de que el sistema de archivos no esté lleno. Monitorea el uso del disco y los puntos de montaje críticos.
+Carga del Sistema: Controla la carga media del sistema y asegúrate de que no esté constantemente alta, lo cual puede indicar problemas de rendimiento.
+Procesos Críticos: Mlogger almacena una serie de procesos en arrays asociativos que chequea cada 4 min para ver si están activos o no, de lo contrario realizará llamadas a logger con otra función para mostrar mensajes según el nivel de criticidad del proceso, si no son tan críticos de los contrario irán a parar a mlog.
+Conectividad de Red: Verifica la disponibilidad y el rendimiento de las interfaces de red. Asegúrate de que no haya pérdida de paquetes ni latencias elevadas.
+Alta
+Uso de CPU: Monitorea el uso de la CPU para detectar cuellos de botella y procesos que consuman recursos de manera excesiva.
+Uso de Memoria RAM: Controla el uso de la memoria para evitar situaciones de memoria insuficiente que puedan causar swaps y afectar el rendimiento.
+Uso de Swap: Verifica el uso del espacio de swap para asegurarte de que no se esté utilizando de manera excesiva.
+Log de Errores: Revisa los logs de errores del sistema y de las aplicaciones críticas para identificar y solucionar problemas potenciales rápidamente.
+Estado de los Servicios Críticos: Asegúrate de que servicios importantes como servidores web, bases de datos, y servidores de aplicaciones estén activos y operativos.
+Media
+Almacenamiento de Datos: Monitorea el espacio disponible en el almacenamiento secundario y los sistemas de backup.
+Temperatura del Hardware: Controla la temperatura de la CPU, discos y otros componentes para evitar sobrecalentamientos.
+Integridad de los Archivos: Verifica la integridad de archivos y directorios esenciales, y detecta cualquier cambio inesperado.
+Estado de la Red: Monitorea el ancho de banda y la latencia para identificar problemas de congestión de red.
+Tareas Programadas (Cron Jobs): Asegúrate de que las tareas programadas se ejecuten correctamente y revisa los logs correspondientes.
+Baja
+Estadísticas de Uso del Servidor: Recopila datos sobre el uso del servidor (CPU, memoria, discos) a lo largo del tiempo para análisis de tendencias.
+Estado de la UPS (Sistema de Alimentación Ininterrumpida): Monitorea la salud y el estado de la UPS para asegurarte de que esté lista en caso de fallos eléctricos.
+Eventos de Seguridad: Aunque importantes, los eventos menores de seguridad se pueden monitorear con menor frecuencia que los eventos críticos.
+Actualizaciones de Software: Verifica la disponibilidad de actualizaciones y parches de software para mantener el sistema seguro y actualizado.
+Consumo de Energía: Monitorea el consumo de energía del servidor y el estado de la fuente de alimentación.
 
-PRIORIDAD MEDIA:
-Uso de la SWAP.
-Carga del sistema (Falta de recursos con visión a futuro).
-Uso de la RED.
-Estado de servicios SECUNDARIOS.
-
-PRIORIDAD BAJA:
-Temperatura del sistema.
-Estado de backups.
-Integridad de los archivos.
-Monitoreo de usuarios conectados y sesiones abiertas.
-
-PRIORIDAD OPCIONAL:
-Conexiones entrantes y salientes.
-Actualizaciones del sistema.
-Latencia de red y pérdida de paquetes.
-Integridad del sistema de archivos.
-Errores de hardware (Discos y Memoria).
 
 
 
@@ -54,4 +52,17 @@ Como root, chmod +x instmlogger.sh
 Lo ejecutamos ./instmlogger.sh
 
 ¿Y qué pasaría si queremos eliminar mlogger de nuestro sistema?
-Si queremos eliminar por completo mlogger del sistema, tenemos otro archivo en el .zip llamado “uninstmlogger.sh”, a el igual que el instalador, solo debemos de seguir los mismos pasos pero con este archivo, esto borrará el script del sistema, eliminará el servicio (deteniendolo primeramente) y solo nos dejará el registro mlog (como recuerdo) en la carpeta /var/log.
+Si queremos eliminar por completo mlogger del sistema, tenemos otro archivo en el .zip llamado “uninstmlogger.sh”, a el igual que el instalador, solo debemos de seguir los mismos pasos pero con este archivo, esto borrará el script del sistema, eliminará el servicio (deteniendolo primeramente) y el archivo residual mlog que quedará se renombrará a mlog.old, si desinstalamos el servicio repetidas veces no supondrá un problema porque se crearán distintos ficheros mlog.old del 1 hasta el infinito.
+
+¿Qué herramientas usa mlogger para trabajar?
+Herramientas para el monitoreo de la red: ifstat, ping, nmap
+Herramientas para monitoreo de CPU: top, lscpu, /proc/stat
+Herramientas para monitoreo de RAM: top, lsmem, /proc/meminfo
+Herramientas para monitoreo de Almacenamiento: df, lsblk
+Herramientas para mostrar información del SO: hostnamectl
+Herramientas para monitorear servicios: systemctl
+Herramientas para monitorear la SWAP: free
+Herramientas para monitorear procesos: ps
+Herramientas para monitorear tiempo activo del servidor: uptime
+Herramientas para monitorear usuarios: who
+
