@@ -40,6 +40,8 @@ declare -A servcatlog=(
     ["fail2ban"]="1",
     ["nfs-server"]="1",
     ["rpcbind"]="1",
+    ["zabbix-server"]="1",
+    ["zabbix-agent"]="1",
 
     # Nivel 2: Menos críticos
     ["docker"]="2",
@@ -52,8 +54,6 @@ declare -A servcatlog=(
     ["openvnp"]="2",
     ["tomcat"]="2",
     ["wildfly"]="2",
-
-    # Nivel 3: No conozco la importancia xD
 
 )
 
@@ -311,8 +311,17 @@ function checkCritSrvcs {
                     mlogtime "WARNING: El servicio $service no está activo"
                     ;;
             esac
+
+            # Intentar activar/reiniciar el servicio si es de categoría 0 o 1
+            if [[ "$level" -eq 0 || "$level" -eq 1 ]]; then
+                if systemctl restart "$service" > /dev/null 2>&1; then
+                    mlogtime "SUCCESS: Se reinició el servicio $service exitosamente."
+                else
+                    mloggerflags 0 "ERROR: No se pudo reiniciar el servicio $service. Verifique manualmente."
+                fi
+            fi
         else
-            mlogtime "El servicio $service está activo."
+            mlogtime "$service está activo."
         fi
     done
 }
@@ -382,6 +391,20 @@ function openports {
     echo "$sopenports" >> "$mlog"
 }
 
+#function checkcron {
+#    echo "$cronjobs" >> "$mlog"
+#}
+
+#function backups {
+#    echo "$backup" >> "$mlog"
+#}
+
+function updatesystem {
+    apt update && apt upgrade -y
+    if [[ $? -ne 0 ]]; then
+    mlogtime "No se ha podido actualizar el sistema, por favor revise si hay bloqueos en dpkg"
+}
+
 # ------ PRIORIDAD BAJA ------
 # Función para monitorear el tiempo activo del sistema
 function servuptimeuser {
@@ -435,6 +458,13 @@ getsysteminfo
 # ------ MONITOREO DEL SISTEMA ------
 
 # Monitoreo en bucles separados
+(
+    while true; do
+	updatesystem
+	sleep 86400
+    done
+) &
+
 (
     while true; do
         checklogs
