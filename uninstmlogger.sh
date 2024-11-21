@@ -3,6 +3,7 @@
 # Variables
 sysp="/etc/systemd/system"
 ulbp="/usr/local/bin"
+vlm="/var/log/mlog"
 culbp="$ulbp/mlogger.sh"
 bsp="$ulbp/mloggerbackups.sh"  # Script de backup
 cjp="/etc/cron.d/mloggerbackups-cron"  # Cronjob
@@ -29,6 +30,21 @@ fi
 if [ -f "$bsp" ]; then
     echo "Eliminando el script de copias de seguridad..."
     rm -f "$bsp"
+fi
+
+# Renombrar mlog como antiguo si existe
+if [[ -f "$vlm" ]]; then
+    count=0
+    newmlog="${vlm}.old"
+
+    # Bucle para encontrar un nombre de archivo único
+    while [[ -f "${newmlog}" ]]; do
+        newmlog="${vlm}.old.${count}"
+        count=$((count + 1))
+    done
+
+    # Renombrar el archivo con el nuevo nombre único
+    mv "$vlm" "$newmlog"
 fi
 
 # Eliminar el script principal
