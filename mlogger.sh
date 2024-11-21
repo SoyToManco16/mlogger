@@ -403,6 +403,7 @@ function updatesystem {
     apt update && apt upgrade -y
     if [[ $? -ne 0 ]]; then
     mlogtime "No se ha podido actualizar el sistema, por favor revise si hay bloqueos en dpkg"
+    fi
 }
 
 # ------ PRIORIDAD BAJA ------
