@@ -391,13 +391,17 @@ function openports {
     echo "$sopenports" >> "$mlog"
 }
 
-#function checkcron {
-#    echo "$cronjobs" >> "$mlog"
-#}
+function checkbackupscron {
+    # Verificamos si hay cronjobs configurados para el sistema
+    cronjobs=$(crontab -l 2>/dev/null)
 
-#function backups {
-#    echo "$backup" >> "$mlog"
-#}
+    # Si hay cronjobs, mandamos un mensaje con mlogtime
+    if [ -n "$cronjobs" ]; then
+        mlogtime "Se han encontrado cronjobs configurados en el sistema."
+    else
+        mlogtime "No se han encontrado cronjobs configurados en el sistema."
+    fi
+}
 
 function updatesystem {
     apt update && apt upgrade -y
@@ -462,6 +466,7 @@ getsysteminfo
 (
     while true; do
 	updatesystem
+    checkbackupscron
 	sleep 86400
     done
 ) &
