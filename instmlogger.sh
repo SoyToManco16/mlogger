@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Este script debe ser ejecutado como root y en la misma carpeta donde están todos los scripts
+# Este script debe ser ejecutado en esta carpeta y como root
 
 sysp="/etc/systemd/system"
 ulbp="/usr/local/bin"
@@ -34,16 +34,21 @@ read -p "¿Quieres habilitar las copias de seguridad automáticas? (s/n): " enab
 if [[ "$enablebackups" == "s" || "$enablebackups" == "S" ]]; then
     # Solicitamos los directorios para las copias de seguridad
     read -p "Introduce el directorio donde se realizarán las copias de seguridad (por ejemplo, /home/user/backups): " sourcedir
-    read -p "Introduce el directorio donde se guardarán las copias de seguridad (por ejemplo, /mnt/backups): " destdir
+    read -p "Introduce el directorio donde se guardarán las copias de seguridad (por ejemplo, /mnt/backups): " sourcedest
 
     # Movemos el script de backup a /usr/local/bin
     echo "Moviendo el script de copias de seguridad a $ulbp"
     cp "$mbs" "$ulbp"
     chmod +x "$bsp"
 
+    # Usamos sed para insertar los directorios en el script de backups
+    echo "Insertando los directorios en el script de backup"
+    sed -i "s|#ORIGEN_DIR#|$sourcedir|g" "$bsp"
+    sed -i "s|#DESTINO_DIR#|$sourcedest|g" "$bsp"
+
     # Creamos el cronjob que se ejecutará todos los días a las 3 AM
     echo "Creando cronjob para ejecutar el script de backup todos los días a las 3 AM"
-    echo "0 3 * * * root $bsp $sourcedir $destdir" > "$cjp"
+    echo "0 3 * * * root $bsp" > "$cjp"
 
     # Reiniciamos el cron
     systemctl restart cron
