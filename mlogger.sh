@@ -392,16 +392,15 @@ function openports {
 }
 
 function checkbackupscron {
-    # Verificamos si hay cronjobs configurados para el sistema
-    cronjobs=$(crontab -l 2>/dev/null)
-
-    # Si hay cronjobs, mandamos un mensaje con mlogtime
-    if [ -n "$cronjobs" ]; then
-        mlogtime "Se han encontrado cronjobs configurados en el sistema."
+    # Verificamos si el cronjob específico está presente en los cronjobs de root
+    if crontab -u root -l 2>/dev/null | grep -q "0 3 * * * root /usr/local/bin/mloggerbackups.sh"; then
+        mlogtime "El cronjob mloggerbackups está configurado."
     else
-        mlogtime "No se han encontrado cronjobs configurados en el sistema."
+        mlogtime "No se ha encontrado el cronjob mloggerbackups, puede ser que no se haya instalado."
     fi
 }
+
+
 
 function updatesystem {
     apt update && apt upgrade -y
