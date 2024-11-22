@@ -50,6 +50,9 @@ if [[ "$enablebackups" == "s" || "$enablebackups" == "S" ]]; then
     echo "Creando cronjob para ejecutar el script de backup todos los días a las 3 AM"
     echo "0 3 * * * root $bsp" > "$cjp"
 
+    # Añadir el cronjob
+    echo "0 3 * * * root /usr/local/bin/mloggerbackups.sh" | sudo tee -a /etc/crontab
+
     # Reiniciamos el cron
     systemctl restart cron
 
