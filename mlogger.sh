@@ -293,9 +293,10 @@ function checkCritSrvcs {
     for service in "${!servcatlog[@]}"; do
         local level="${servcatlog[$service]}"
 
-        # Verificar si el servicio está instalado
-        if ! systemctl show "$service" --no-pager > /dev/null 2>&1; then
-            continue
+        # Verificar si el servicio está instalado (habilitado en systemd)
+        if ! systemctl list-units --type=service --all | grep -q "$service.service"; then
+            mlogtime "El servicio $service no está instalado en el sistema."
+            continue  # Si no está instalado, continuar con el siguiente servicio
         fi
 
         # Verificar si el servicio está activo
@@ -316,6 +317,8 @@ function checkCritSrvcs {
             if [[ "$level" -eq 0 || "$level" -eq 1 ]]; then
                 if systemctl restart "$service" > /dev/null 2>&1; then
                     mlogtime "SUCCESS: Se reinició el servicio $service exitosamente."
+                else
+                    mloggerflags 0 "ERROR: No se pudo reiniciar el servicio $service. Verifique manualmente."
                 fi
             fi
         else
@@ -323,6 +326,7 @@ function checkCritSrvcs {
         fi
     done
 }
+
 
 # Función para monitorear errores en los logs
 function checklogs {
