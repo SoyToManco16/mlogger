@@ -30,3 +30,13 @@ if [ $? -eq 0 ]; then
 else
     echo "Error al realizar la copia de seguridad."
 fi
+
+# Confirmamos el contenido del archivo tar.gz como paso adicional de validación
+echo "Verificando el contenido del archivo de respaldo..."
+if tar -tzf "$destino/$backupfile" > /dev/null; then
+    echo "El archivo de respaldo ha sido verificado correctamente."
+else
+    echo "Advertencia: Hubo un problema al verificar el archivo de respaldo."
+    exit 1
+fi
+
