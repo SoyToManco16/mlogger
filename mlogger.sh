@@ -316,8 +316,6 @@ function checkCritSrvcs {
             if [[ "$level" -eq 0 || "$level" -eq 1 ]]; then
                 if systemctl restart "$service" > /dev/null 2>&1; then
                     mlogtime "SUCCESS: Se reinició el servicio $service exitosamente."
-                else
-                    mloggerflags 0 "ERROR: No se pudo reiniciar el servicio $service. Verifique manualmente."
                 fi
             fi
         else
