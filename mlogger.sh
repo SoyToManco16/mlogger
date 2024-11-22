@@ -97,96 +97,6 @@ mlogtime() {
     echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" >> "$mlog"
 }
 
-function getsysteminfo {
-# Obtener información del SO
-SO=$(hostnamectl | awk ' /Operating System/ {print $3, $4, $5}')
-KERNELV=$(hostnamectl | awk '/Kernel/ {print $3, $4}')
-SNAME=$(hostname)
-HWM=$(hostnamectl | awk ' /Hardware Model/ {print $3, $4, $5}')
-
-# Información de la CPU
-ARCH=$(lscpu | grep "Architecture" | awk '{print $2}')
-CPUM=$(lscpu | grep "^Model name" | awk -F: '{print $2}' | sed 's/^ *//')
-CRPU=$(lscpu | grep "^Core(s) per socket" | awk '{print $4}')
-TCPU=$(lscpu | grep "^Thread(s) per core" | awk '{print $4}')
-ECPU=$(lscpu | grep "^CPU(s):" | awk '{print $2}')
-
-# Información de la memoria RAM
-TMEM=$(lsmem | awk ' /Total online memory:/ {print $4}')
-NUMEM=$(lsmem | awk ' /Total offline memory:/ {print $4}')
-
-# Información de los dispositivos de almacenamiento
-info_discos=""
-disks=$(lsblk -dn -o NAME,TYPE | awk '$2=="disk" {print $1}')
-index=1
-
-for disk in $disks; do
-    # Obtener el modelo del disco
-    model=$(sudo udevadm info --query=all --name=/dev/$disk | grep 'ID_MODEL=' | cut -d'=' -f2)
-
-    # Obtener el tamaño del disco
-    size=$(lsblk -dno SIZE /dev/$disk)
-
-    # Inicializar variables para espacio usado y libre
-    total_used=0
-    total_free=0
-
-    # Obtener todas las particiones del disco y sumar el espacio usado y libre
-    partitions=$(lsblk -ln -o NAME,MOUNTPOINT | grep "^$disk" | awk '$2!="" {print $1}')
-    for part in $partitions; do
-        part_used=$(df -B1 --output=used "/dev/$part" 2>/dev/null | tail -n 1)
-        part_avail=$(df -B1 --output=avail "/dev/$part" 2>/dev/null | tail -n 1)
-
-        if [ -n "$part_used" ] && [ -n "$part_avail" ]; then
-            total_used=$((total_used + part_used))
-            total_free=$((total_free + part_avail))
-        fi
-    done
-
-    # Convertir los valores de espacio a formato legible
-    used=$(numfmt --to=iec --suffix=B $total_used)
-    free=$(numfmt --to=iec --suffix=B $total_free)
-
-    # Añadir la información a la variable con un espacio extra entre discos
-    info_discos+="Disco $index:\n"
-    info_discos+="Modelo: $model\n"
-    info_discos+="Tamaño: $size\n"
-    info_discos+="Espacio usado: $used\n"
-    info_discos+="Espacio libre: $free\n\n\n"
-    index=$((index + 1))
-done
-
-# Redirigir toda la salida al archivo mlogger_output.txt
-{
-    echo "BIENVENIDO A MLOGGER"
-    sleep 1
-    echo
-    echo "INFORMACIÓN DEL SISTEMA"
-    mlogdelimit '=' 70
-    echo "Información general"
-    echo "Nombre del sistema: $SNAME"
-    echo "SO Instalado: $SO"
-    echo "Version del kernel: $KERNELV"
-    echo "Modelo de hardware: $HWM"
-    mlogdelimit '=' 70
-    echo "Información de la CPU"
-    echo "Modelo de la CPU: $CPUM"
-    echo "Arquitectura del procesador: $ARCH"
-    echo "Núcleos de la CPU: $CRPU"
-    echo "Núcleos habilitados: $ECPU"
-    echo "Hilos de la CPU: $TCPU"
-    mlogdelimit '=' 70
-    echo "Información de la memoria RAM"
-    echo "Memoria total instalada: $TMEM"
-    echo "Memoria total no usada: $NUMEM"
-    mlogdelimit '=' 70
-    echo "Información de los dispositivos de almacenamiento instalados"
-    echo "Dispositivos conectados"
-    echo -e "$info_discos" # Muestra los discos duros instalados
-} > "$mlog"
-
-}
-
 # Función para 'Flaggear' los eventos que van al logger
 function mloggerflags {
     local nivel=$1
@@ -491,10 +401,6 @@ function conectedusers {
     mlogtime "$users"
     mloggerflags 6 "$users"
 }
-
-# ------ INFORMACIÓN DEL SISTEMA ------
-
-getsysteminfo
 
 # ------ MONITOREO DEL SISTEMA ------
 
