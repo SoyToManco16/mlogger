@@ -409,6 +409,41 @@ function updatesystem {
     fi
 }
 
+function netreport {
+
+timestamp=$(date "+%H-%M-%S")
+
+# Extraer las métricas específicas de netstat -s
+total_packets_received=$(netstat -s | grep -i "total packets received" | awk '{print $1}')
+icmp_received=$(netstat -s | grep -i "icmp messages received" | awk '{print $1}')
+icmp_failed=$(netstat -s | grep -i "icmp messages failed" | awk '{print $1}')
+tcp_passive=$(netstat -s | grep -i "passive connection openings" | awk '{print $1}')
+tcp_active=$(netstat -s | grep -i "active connection openings" | awk '{print $1}')
+udp_received=$(netstat -s | grep -i "packets received" | grep -i udp | awk '{print $1}')
+udp_sent=$(netstat -s | grep -i "packets sent" | grep -i udp | awk '{print $1}')
+
+# Crear el informe
+{
+    echo "$timestamp - Informe de estadísticas de red"
+    echo "General"
+    mlogdelimit '-' 30
+    echo "Total de paquetes recibidos: $total_packets_received"
+    echo "ICMP"
+    mlogdelimit '-' 30
+    echo "Mensajes ICMP recibidos: $icmp_received"
+    echo "Mensajes ICMP fallidos: $icmp_failed"
+    echo "TCP"
+    mlogdelimit '-' 30
+    echo "Conexiones TCP pasivas: $tcp_passive"
+    echo "Conexiones TCP activas: $tcp_active"
+    echo "UDP"
+    mlogdelimit '-' 30
+    echo "Paquetes UDP recibidos: $udp_received"
+    echo "Paquetes UDP enviados: $udp_sent"
+} > "$mlog"
+
+}
+
 # ------ PRIORIDAD BAJA ------
 # Función para monitorear el tiempo activo del sistema
 function servuptimeuser {
