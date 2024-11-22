@@ -352,7 +352,7 @@ udp_sent=$(netstat -s | grep -i "packets sent" | grep -i udp | awk '{print $1}')
     mlogdelimit '-' 30
     echo "Paquetes UDP recibidos: $udp_received"
     echo "Paquetes UDP enviados: $udp_sent"
-} > "$mlog"
+} >> "$mlog"
 
 }
 
