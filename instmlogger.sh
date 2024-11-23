@@ -1,14 +1,16 @@
 #!/bin/bash
 
-# Este script debe ser ejecutado en esta carpeta y como root
-
+# Rutas de los archivos y directorios
 sysp="/etc/systemd/system"
 ulbp="/usr/local/bin"
 culbp="$ulbp/mlogger.sh"
 servf="$sysp/mlogger.service"
-mbs="mloggerbackups.sh"  # Nombre del script de backup
-bsp="$ulbp/$mbs"  # Ruta final del script de backup
-cjp="/etc/cron.d/mloggerbackups-cron"  # Fichero cron donde añadiremos el job
+mbs="mloggerbackups.sh"
+etcm="/etc/mlogger"
+mscripts="$etcm/scripts"
+sclc="servcatlog.conf"
+readme="README.txt"
+cjp="/etc/cron.d/mloggerbackups-cron"
 
 # Instalar dependencias
 echo "Instalando dependencias"
@@ -16,55 +18,55 @@ sudo apt update
 sudo apt install util-linux dmidecode iputils-ping gawk procps bc coreutils bsdutils
 clear
 
-# Comprobamos si existe el script principal mlogger.sh en el fichero o no
-if [ ! -f "$culbp" ]; then 
+echo "Preparando todo para usted, espere por favor :)"
+mkdir -p /etc/mlogger/scripts
+cp "$readme" "$etcm" && cp "$sclc" "$etcm" || { echo "Error al copiar archivos"; exit 1; }
+
+# Comprobamos si el script principal mlogger.sh está en /usr/local/bin
+if [ ! -f "$culbp" ]; then
     echo "Moviendo el script a $ulbp"
-    cp mlogger.sh "$ulbp"
-    chmod +x "$culbp"
+    cp mlogger.sh "$ulbp" && chmod +x "$culbp" || { echo "Error al copiar mlogger.sh"; exit 1; }
 fi
 
-# Comprobamos si el script de backup mloggerbackups.sh existe en la carpeta actual
-if [ ! -f "$mbs" ]; then
-    echo "El script de copias de seguridad no está presente. Asegúrese de tenerlo en la misma carpeta que este script."
-    exit 1
-fi
-
-# Preguntamos al usuario si quiere habilitar las copias de seguridad
+# Preguntar por las copias de seguridad
 read -p "¿Quieres habilitar las copias de seguridad automáticas? (s/n): " enablebackups
 if [[ "$enablebackups" == "s" || "$enablebackups" == "S" ]]; then
-    # Solicitamos los directorios para las copias de seguridad
-    read -p "Introduce el directorio donde se realizarán las copias de seguridad (por ejemplo, /home/user/backups): " sourcedir
-    read -p "Introduce el directorio donde se guardarán las copias de seguridad (por ejemplo, /mnt/backups): " sourcedest
+    # Verificar si el script de backup está presente
+    if [ ! -f "$mbs" ]; then
+        echo "El script de copias de seguridad no está presente. Asegúrese de tenerlo en la misma carpeta que este script."
+        exit 1
+    fi
 
-    # Movemos el script de backup a /usr/local/bin
-    echo "Moviendo el script de copias de seguridad a $ulbp"
-    cp "$mbs" "$ulbp"
-    chmod +x "$bsp"
+    # Solicitar directorios de backup
+    read -p "Introduce el directorio de origen para las copias de seguridad: " sourcedir
+    read -p "Introduce el directorio de destino para las copias de seguridad: " sourcedest
 
-    # Usamos sed para insertar los directorios en el script de backups
-    echo "Insertando los directorios en el script de backup"
-    sed -i "s|#ORIGEN_DIR#|$sourcedir|g" "$bsp"
-    sed -i "s|#DESTINO_DIR#|$sourcedest|g" "$bsp"
+    # Validación de directorios
+    if [[ ! -d "$sourcedir" || ! -d "$sourcedest" ]]; then
+        echo "Uno de los directorios no existe. Saliendo..."
+        exit 1
+    fi
 
-    # Creamos el cronjob que se ejecutará todos los días a las 3 AM
-    echo "Creando cronjob para ejecutar el script de backup todos los días a las 3 AM"
-    echo "0 3 * * * root $bsp" > "$cjp"
-
-    # Añadir el cronjob
-    echo "0 3 * * * root /usr/local/bin/mloggerbackups.sh" | sudo tee -a /etc/crontab
-
-    # Reiniciamos el cron
-    systemctl restart cron
-
-    echo "Copias de seguridad habilitadas, continuando con la instalación"
+    # Copiar y ajustar script de backup
+    cp "$mbs" "$mscripts" && chmod +x "$mscripts/mloggerbackups.sh"
+    sed -i "s|#ORIGEN_DIR#|$sourcedir|g" "$mscripts/mloggerbackups.sh"
+    sed -i "s|#DESTINO_DIR#|$sourcedest|g" "$mscripts/mloggerbackups.sh"
+    
+    # Crear cronjob si no existe
+    if ! grep -q "$mscripts/mloggerbackups.sh" "$cjp"; then
+        echo "0 3 * * * root $mscripts/mloggerbackups.sh" > "$cjp"
+        systemctl restart cron
+    else
+        echo "El cronjob ya está configurado."
+    fi
 else
     echo "Continuando con la Instalación"
 fi
 
-# Si el servicio no está creado lo crea
+# Crear el archivo de servicio si no existe
 if [ ! -f "$servf" ]; then
     echo "Generando archivo de configuración de servicio de mlogger"
-    cat <<EOF > "$servf"
+    cat <<EOF | tee "$servf" > /dev/null
 [Unit]
 Description=Mlogger
 After=network.target
@@ -80,13 +82,16 @@ WantedBy=multi-user.target
 EOF
 fi
 
-# Reiniciamos la lista de servicios 
+# Reiniciar el sistema de servicios
 systemctl daemon-reload
 
-# Habilitamos el servicio 
-systemctl enable mlogger.service
+# Habilitar e iniciar el servicio
+if ! systemctl is-enabled mlogger.service > /dev/null; then
+    systemctl enable mlogger.service
+else
+    echo "El servicio ya está habilitado."
+fi
 
-# Y lo iniciamos 
 systemctl start mlogger.service
 echo "Instalación completada, disfrute de mlogger :)"
 clear
