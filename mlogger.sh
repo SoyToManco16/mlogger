@@ -155,25 +155,25 @@ function DiskUsage {
     done
 }
 
-# Función para verificar los servicios
 function checkCritSrvcs {
 
-# Variables para el checker de servicios
-declare -A servcatlog
-CONFIG_FILE="/etc/mlogger/servcatlog.conf"
+    # Variables para el checker de servicios
+    declare -A servcatlog
+    CONFIG_FILE="/etc/mlogger/servcatlog.conf"
+    active_services=()  # Array para almacenar servicios activos
 
-# Verificar si el archivo de configuración existe
-if [[ ! -f "$CONFIG_FILE" ]]; then
-    mloggerflags 0 "ERROR: El archivo de configuración $CONFIG_FILE no se encuentra. No se están analizando los servicios."
-    exit 1
-fi
+    # Verificar si el archivo de configuración existe
+    if [[ ! -f "$CONFIG_FILE" ]]; then
+        mloggerflags 2 "ERROR: El archivo de configuración $CONFIG_FILE no se encuentra. No se están analizando los servicios." 
+        exit 1
+    fi
 
-# Leer el archivo línea por línea y cargar los servicios y su criticidad en el array
-while IFS='=' read -r service level; do
-    # Ignorar líneas vacías o comentarios
-    [[ -z "$service" || "$service" =~ ^# ]] && continue
-    servcatlog["$service"]=$level
-done < "$CONFIG_FILE"
+    # Leer el archivo línea por línea y cargar los servicios y su criticidad en el array
+    while IFS='=' read -r service level; do
+        # Ignorar líneas vacías o comentarios
+        [[ -z "$service" || "$service" =~ ^# ]] && continue
+        servcatlog["$service"]=$level
+    done < "$CONFIG_FILE"
 
     for service in "${!servcatlog[@]}"; do
         local level="${servcatlog[$service]}"
@@ -185,31 +185,28 @@ done < "$CONFIG_FILE"
         fi
 
         # Verificar si el servicio está activo
-        if ! systemctl is-active --quiet "$service"; then
+        if systemctl is-active --quiet "$service"; then
+            active_services+=("$service")  # Añadir a la lista de activos
+        else
+            # Solo registrar los servicios inactivos en el log
             case "$level" in
                 0)
-                    mloggerflags 0 "CRITICAL: El servicio $service está detenido o fallando"
+                    mloggerflags 0 "CRITICAL: El servicio $service está detenido o fallando."
                     ;;
                 1)
-                    mloggerflags 1 "ALERT: El servicio $service no está activo"
+                    mloggerflags 1 "ALERT: El servicio $service no está activo."
                     ;;
                 2)
-                    mlogtime "WARNING: El servicio $service no está activo"
+                    mlogtime "WARNING: El servicio $service no está activo."
                     ;;
             esac
-
-            # Intentar activar/reiniciar el servicio si es de categoría 0 o 1
-            if [[ "$level" -eq 0 || "$level" -eq 1 ]]; then
-                if systemctl restart "$service" > /dev/null 2>&1; then
-                    mlogtime "SUCCESS: Se reinició el servicio $service exitosamente."
-                else
-                    mloggerflags 0 "ERROR: No se pudo reiniciar el servicio $service. Verifique manualmente."
-                fi
-            fi
-        else
-            mlogtime "$service está activo."
         fi
     done
+
+    # Mostrar solo los servicios activos
+    if [[ ${#active_services[@]} -gt 0 ]]; then
+        mlogtime "SUCCESS: Los servicios ${active_services[*]} están activos y funcionando correctamente."
+    fi
 }
 
 
