@@ -20,16 +20,12 @@ systemctl daemon-reload
 
 # Eliminar el cronjob si existe
 if [ -f "$cjp" ]; then
-    echo "Eliminando el cronjob de copias de seguridad..."
     rm -f "$cjp"
     systemctl restart cron  # Reiniciar el cron para aplicar los cambios
-else
-    echo "No se encontró el cronjob de copias de seguridad."
 fi
 
 # Eliminar el script de backups
 if [ -f "$bsp" ]; then
-    echo "Eliminando el script de copias de seguridad..."
     rm -f "$bsp"
 fi
 
@@ -50,7 +46,6 @@ fi
 
 # Eliminar el script principal
 if [ -f "$culbp" ]; then
-    echo "Eliminando el script principal mlogger.sh..."
     rm -f "$culbp"
 fi
 
@@ -58,7 +53,6 @@ fi
 if [ -d "$etcm" ]; then
     read -p "¿Estás seguro de que deseas eliminar la carpeta de configuración '/etc/mlogger' y todo su contenido? (s/n): " confirm_delete
     if [[ "$confirm_delete" == "s" || "$confirm_delete" == "S" ]]; then
-        echo "Eliminando la carpeta '/etc/mlogger' y todo su contenido..."
         rm -rf "$etcm"  # Eliminar la carpeta y todo su contenido
     else
         echo "La carpeta '/etc/mlogger' no se ha eliminado."
