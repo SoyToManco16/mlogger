@@ -1,0 +1,41 @@
+# Formato: servicio=criticidad
+
+# Críticos (0)
+networking=0
+sshd=0
+cron=0
+rsyslog=0
+systemd-journald=0
+firewalld=0
+ufw=0
+ntp=0
+chrony=0
+
+# Importantes (1)
+mysql=1
+mariadb=1
+postgresql=1
+redis=1
+apache2=1
+nginx=1
+php7.4-fpm=1
+lvm2-monitor=1
+blk-availability=1
+apparmor=1
+selinux=1
+fail2ban=1
+nfs-server=1
+rpcbind=1
+zabbix-server=1
+zabbix-agent=1
+
+# Menos críticos (2)
+docker=2
+containerd=2
+libvirtd=2
+kubelet=2
+snapd=2
+cups=2
+openvpn=2
+tomcat=2
+wildfly=2
