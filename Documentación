@@ -14,28 +14,21 @@ Uso de la Memoria RAM (MiB Mem). OK!!
 Espacio en disco. OK!!
 Servicios críticos. OK!!
 Supervisión de logs del sistema como (syslog, dmesg, audit.log…). OK!!
-Estado de backups.
+Estado de backups. OK !! /
 Copias de seguridad OK!!
 
 PRIORIDAD MEDIA:
 Uso de la SWAP. OK!!
-Carga del sistema (Falta de recursos con visión a futuro). 
-Uso de la RED. 
-Procesos que más CPU y MEM consumen.
+Uso de la RED. OK!!
+Procesos que más CPU y MEM consumen. OK!!
+Conexiones entrantes y salientes. 
+Puertos abiertos y en funcionamiento nmap. OK!!
+Actualizaciones del sistema. OK !! 
+Errores de hardware (Discos y Memoria). /
 
 PRIORIDAD BAJA:
-Temperatura del sistema.
 Integridad de los archivos.
-Monitoreo de usuarios conectados y sesiones abiertas.
-
-PRIORIDAD OPCIONAL:
-Conexiones entrantes y salientes.
-Actualizaciones del sistema.
-Latencia de red y pérdida de paquetes.
-Integridad del sistema de archivos.
-Errores de hardware (Discos y Memoria).
-
-
+Monitoreo de usuarios conectados. OK !!
 
 
 ¿Cómo funciona el script?
