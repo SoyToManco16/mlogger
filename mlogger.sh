@@ -160,7 +160,7 @@ function checkCritSrvcs {
 
 # Variables para el checker de servicios
 declare -A servcatlog
-CONFIG_FILE="servcatlog.conf"
+CONFIG_FILE="/etc/mlogger/servcatlog.conf"
 
 # Verificar si el archivo de configuración existe
 if [[ ! -f "$CONFIG_FILE" ]]; then
