@@ -7,6 +7,7 @@ vlm="/var/log/mlog"
 culbp="$ulbp/mlogger.sh"
 bsp="$ulbp/mloggerbackups.sh"  # Script de backup
 cjp="/etc/cron.d/mloggerbackups-cron"  # Cronjob
+etcm="/etc/mlogger"  # Carpeta de configuración
 
 # Eliminar el servicio
 echo "Deteniendo y deshabilitando el servicio mlogger..."
@@ -51,6 +52,19 @@ fi
 if [ -f "$culbp" ]; then
     echo "Eliminando el script principal mlogger.sh..."
     rm -f "$culbp"
+fi
+
+# Eliminar la carpeta de configuración y todos sus archivos (si existe)
+if [ -d "$etcm" ]; then
+    read -p "¿Estás seguro de que deseas eliminar la carpeta de configuración '/etc/mlogger' y todo su contenido? (s/n): " confirm_delete
+    if [[ "$confirm_delete" == "s" || "$confirm_delete" == "S" ]]; then
+        echo "Eliminando la carpeta '/etc/mlogger' y todo su contenido..."
+        rm -rf "$etcm"  # Eliminar la carpeta y todo su contenido
+    else
+        echo "La carpeta '/etc/mlogger' no se ha eliminado."
+    fi
+else
+    echo "No se encontró la carpeta '/etc/mlogger'."
 fi
 
 # Finalizar
