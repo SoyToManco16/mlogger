@@ -4,6 +4,7 @@
 mlog="/var/log/mlog"
 LOCKFILE="/tmp/mlogger.lock"
 
+
 # Imprimir delimitadores
 function mlogdelimit {
     local del=$1
@@ -12,50 +13,6 @@ function mlogdelimit {
     # Uso: mlgdelimit '*_-#' 50
 }
 
-# Diccionario de servicios con sus niveles de criticidad
-declare -A servcatlog=(
-    # Nivel 0: Críticos
-    ["networking"]="0",
-    ["sshd"]="0",
-    ["cron"]="0",
-    ["rsyslog"]="0",
-    ["systemd-journald"]="0",
-    ["firewalld"]="0",
-    ["ufw"]="0",
-    ["ntp"]="0",
-    ["chrony"]="0",
-
-    # Nivel 1: Importantes
-    ["mysql"]="1",
-    ["mariadb"]="1",
-    ["postgresql"]="1",
-    ["redis"]="1",
-    ["apache2"]="1",
-    ["nginx"]="1",
-    ["php7.4-fpm"]="1",
-    ["lvm2-monitor"]="1",
-    ["blk-availability"]="1",
-    ["apparmor"]="1",
-    ["selinux"]="1",
-    ["fail2ban"]="1",
-    ["nfs-server"]="1",
-    ["rpcbind"]="1",
-    ["zabbix-server"]="1",
-    ["zabbix-agent"]="1",
-
-    # Nivel 2: Menos críticos
-    ["docker"]="2",
-    ["containerd"]="2",
-    ["lvm2-monitor"]="2",
-    ["libvirtd"]="2",
-    ["kubelet"]="2",
-    ["snapd"]="2",
-    ["cups"]="2",
-    ["openvnp"]="2",
-    ["tomcat"]="2",
-    ["wildfly"]="2",
-
-)
 
 # Diccionario de archivos de registros
 declare -A logfiles=(
@@ -96,6 +53,7 @@ mlogtime() {
     echo >> "$mlog"
     echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" >> "$mlog"
 }
+
 
 # Función para 'Flaggear' los eventos que van al logger
 function mloggerflags {
@@ -197,16 +155,33 @@ function DiskUsage {
     done
 }
 
-
-# Función para verificar y categorizar servicios críticos
+# Función para verificar los servicios
 function checkCritSrvcs {
+
+# Variables para el checker de servicios
+declare -A servcatlog
+CONFIG_FILE="servcatlog.conf"
+
+# Verificar si el archivo de configuración existe
+if [[ ! -f "$CONFIG_FILE" ]]; then
+    mloggerflags 0 "ERROR: El archivo de configuración $CONFIG_FILE no se encuentra. No se están analizando los servicios."
+    exit 1
+fi
+
+# Leer el archivo línea por línea y cargar los servicios y su criticidad en el array
+while IFS='=' read -r service level; do
+    # Ignorar líneas vacías o comentarios
+    [[ -z "$service" || "$service" =~ ^# ]] && continue
+    servcatlog["$service"]=$level
+done < "$CONFIG_FILE"
+
     for service in "${!servcatlog[@]}"; do
         local level="${servcatlog[$service]}"
 
-        # Verificar si el servicio está instalado (habilitado en systemd)
-        if ! systemctl list-units --type=service --all | grep -q "$service.service"; then
-            mlogtime "El servicio $service no está instalado en el sistema."
-            continue  # Si no está instalado, continuar con el siguiente servicio
+        # Verificar si el servicio está instalado
+        if ! systemctl show "$service" --no-pager > /dev/null 2>&1; then
+            mlogtime "INFO: El servicio $service no está instalado o no se puede verificar."
+            continue
         fi
 
         # Verificar si el servicio está activo
@@ -304,56 +279,22 @@ function openports {
 }
 
 function checkbackupscron {
-    # Verificamos si el cronjob específico está presente en los cronjobs de root
-    if crontab -u root -l 2>/dev/null | grep -q "0 3 * * * root /usr/local/bin/mloggerbackups.sh"; then
-        mlogtime "El cronjob mloggerbackups está configurado."
+    # Verificamos si hay cronjobs configurados para el sistema
+    cronjobs=$(crontab -l 2>/dev/null)
+
+    # Si hay cronjobs, mandamos un mensaje con mlogtime
+    if [ -n "$cronjobs" ]; then
+        mlogtime "Se han encontrado cronjobs configurados en el sistema."
     else
-        mlogtime "No se ha encontrado el cronjob mloggerbackups, puede ser que no se haya instalado."
+        mlogtime "No se han encontrado cronjobs configurados en el sistema."
     fi
 }
-
-
 
 function updatesystem {
     apt update && apt upgrade -y
     if [[ $? -ne 0 ]]; then
     mlogtime "No se ha podido actualizar el sistema, por favor revise si hay bloqueos en dpkg"
     fi
-}
-
-function netreport {
-
-timestamp=$(date "+%H-%M-%S")
-
-# Extraer las métricas específicas de netstat -s
-total_packets_received=$(netstat -s | grep -i "total packets received" | awk '{print $1}')
-icmp_received=$(netstat -s | grep -i "icmp messages received" | awk '{print $1}')
-icmp_failed=$(netstat -s | grep -i "icmp messages failed" | awk '{print $1}')
-tcp_passive=$(netstat -s | grep -i "passive connection openings" | awk '{print $1}')
-tcp_active=$(netstat -s | grep -i "active connection openings" | awk '{print $1}')
-udp_received=$(netstat -s | grep -i "packets received" | grep -i udp | awk '{print $1}')
-udp_sent=$(netstat -s | grep -i "packets sent" | grep -i udp | awk '{print $1}')
-
-# Crear el informe
-{
-    echo "$timestamp - Informe de estadísticas de red"
-    echo "General"
-    mlogdelimit '-' 30
-    echo "Total de paquetes recibidos: $total_packets_received"
-    echo "ICMP"
-    mlogdelimit '-' 30
-    echo "Mensajes ICMP recibidos: $icmp_received"
-    echo "Mensajes ICMP fallidos: $icmp_failed"
-    echo "TCP"
-    mlogdelimit '-' 30
-    echo "Conexiones TCP pasivas: $tcp_passive"
-    echo "Conexiones TCP activas: $tcp_active"
-    echo "UDP"
-    mlogdelimit '-' 30
-    echo "Paquetes UDP recibidos: $udp_received"
-    echo "Paquetes UDP enviados: $udp_sent"
-} >> "$mlog"
-
 }
 
 # ------ PRIORIDAD BAJA ------
