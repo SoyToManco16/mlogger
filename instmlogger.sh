@@ -12,8 +12,8 @@ mbackups="$etcm/backups"
 sclc="servcatlog.conf"
 readme="README.txt"
 cjp="/etc/cron.d/mloggerbackups-cron"   # Cronjob copias de seguridad
-sourcedest="$mbackups"              # Ruta del destino de las backups
-mlog="/var/log/mlog"               # Ruta del archivo de log que quieres rotar
+sourcedest="$mbackups"                  # Ruta del destino de las backups
+mlog="/var/log/mlog.log"               
 logrotate_conf="/etc/logrotate.d/mlogger"  # Configuración de logrotate para mlogger
 
 # Instalar dependencias
@@ -49,7 +49,7 @@ if [[ "$enablebackups" == "s" || "$enablebackups" == "S" ]]; then
     read -p "Introduce el directorio de origen para las copias de seguridad: " sourcedir
 
     # Validación de directorios
-    if [[ ! -d "$sourcedir" || ! -d "$sourcedest" ]]; then
+    if [[ ! -d "$sourcedir" ]]; then
         echo "El directorio no existe. Saliendo..."
         exit 1
     fi
@@ -105,13 +105,12 @@ systemctl start mlogger.service
 echo "Configurando logrotate para mlog"
 cat <<EOF | tee "$logrotate_conf" > /dev/null
 $mlog {
-    daily               # Rotar los logs diariamente
-    missingok           # No fallar si el log no existe
-    rotate 7            # Mantener 7 copias de seguridad de los logs
-    compress            # Comprimir los logs antiguos
-    delaycompress       # Comprimir solo después de la segunda rotación
-    notifempty          # No rotar si el log está vacío
-    create 0644 root root  # Crear nuevo log con permisos 644
+    daily
+    missingok         
+    rotate 7          
+    compress
+    notifempty
+    create 0644 root root
 }
 EOF
 
