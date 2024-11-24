@@ -4,6 +4,7 @@
 mlog="/var/log/mlog"
 LOCKFILE="/tmp/mlogger.lock"
 
+# ---------- COMIENZO DEL SCRIPT ----------
 
 # Imprimir delimitadores
 function mlogdelimit {
@@ -12,7 +13,6 @@ function mlogdelimit {
     printf '%*s\n' $num | tr ' ' "$del"
     # Uso: mlgdelimit '*_-#' 50
 }
-
 
 # Diccionario de archivos de registros
 declare -A logfiles=(
@@ -29,7 +29,6 @@ declare -A logfiles=(
     ["/var/log/boot.log"]="error",
     ["/var/log/dmesg"]="*error*"
 )
-
 
 # Asegurarse de que el archivo de log existe
 function logfile {
@@ -54,7 +53,6 @@ mlogtime() {
     echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" >> "$mlog"
 }
 
-
 # Función para 'Flaggear' los eventos que van al logger
 function mloggerflags {
     local nivel=$1
@@ -65,12 +63,14 @@ function mloggerflags {
         1) logger -p user.alert "$flag";; 	# Alerta
         2) logger -p user.crit "$flag";; 	# Crítico
         3) logger -p user.err "$flag";; 	# Error
-        4) logger -p user.warning "$flag";; 	# Advertencia
+        4) logger -p user.warning "$flag";; # Advertencia
         5) logger -p user.notice "$flag";; 	# Aviso
         6) logger -p user.info "$flag";; 	# Información
         7) logger -p user.debug "$flag";; 	# Depuración
     esac
 }
+
+# ---------- COMIENZO DEL SCRIPT DE MONITOREO ----------
 
 # Función para verificar la conexión a internet cada 15 minutos
 function connection {
@@ -84,27 +84,23 @@ function connection {
 
 # Función para monitorear el uso de la CPU
 function CPUsage {
-    # Leer la primera línea de /proc/stat
-    cpu_line=$(head -n 1 /proc/stat)
-
-    # Obtener los valores de tiempo de CPU
-    cpu_idle=$(echo $cpu_line | awk '{print $5}')
-    cpu_total=$(echo $cpu_line | awk '{print $2+$3+$4+$5+$6+$7+$8}')
-
+    # Leer la línea de /proc/stat y almacenar los valores relevantes
+    cpu_stats_old=$(awk '{print $2+$3+$4+$5+$6+$7+$8, $5}' /proc/stat)
+    
     # Esperar un segundo
     sleep 1
 
-    # Leer la primera línea de /proc/stat de nuevo
-    cpu_line_new=$(head -n 1 /proc/stat)
+    # Leer nuevamente los valores de /proc/stat
+    cpu_stats_new=$(awk '{print $2+$3+$4+$5+$6+$7+$8, $5}' /proc/stat)
 
-    # Obtener los nuevos valores de tiempo de CPU
-    cpu_idle_new=$(echo $cpu_line_new | awk '{print $5}')
-    cpu_total_new=$(echo $cpu_line_new | awk '{print $2+$3+$4+$5+$6+$7+$8}')
+    # Extraer el uso total y el tiempo inactivo de ambas lecturas
+    read cpu_total_old cpu_idle_old <<< $cpu_stats_old
+    read cpu_total_new cpu_idle_new <<< $cpu_stats_new
 
-    # Calcular el uso de la CPU
-    cpu_idle_diff=$((cpu_idle_new - cpu_idle))
-    cpu_total_diff=$((cpu_total_new - cpu_total))
-    cpu_usage=$((100 * (cpu_total_diff - cpu_idle_diff) / cpu_total_diff))
+    # Calcular el uso de CPU
+    cpu_diff=$((cpu_total_new - cpu_total_old))
+    idle_diff=$((cpu_idle_new - cpu_idle_old))
+    cpu_usage=$((100 * (cpu_diff - idle_diff) / cpu_diff))
 
     if [[ $cpu_usage -gt 90 ]]; then
         mloggerflags 2 "CRITICAL: El uso de la CPU ha sobrepasado el 90%, por favor revise el servidor"
@@ -113,30 +109,23 @@ function CPUsage {
     fi
 }
 
-
 # Función para monitorear el uso de la RAM
 function RAMUsage {
-    # Leer los valores de memoria desde /proc/meminfo
-    total_memory=$(grep MemTotal /proc/meminfo | awk '{print $2}')
-    free_memory=$(grep MemAvailable /proc/meminfo | awk '{print $2}')
+    # Obtener la información de memoria en MB
+    mem_info=$(free -m | grep Mem: | awk '{print $2, $3, $4}')
+    read total_memory_mb used_memory_mb free_memory_mb <<< $mem_info
 
-    # Convertir los valores de memoria de kB a MB para mayor precisión
-    total_memory_mb=$((total_memory / 1024))
-    free_memory_mb=$((free_memory / 1024))
-
-    # Calcular el porcentaje de uso de RAM
-    used_memory=$((total_memory_mb - free_memory_mb))
-    ram_usage=$((100 * used_memory / total_memory_mb))
+    # Calcular el porcentaje de uso de la RAM
+    ram_usage=$((100 * used_memory_mb / total_memory_mb))
 
     if [[ $ram_usage -gt 90 ]]; then
         mloggerflags 2 "CRITICAL: El uso de la memoria ha superado el 90%!!"
-    elif [[ $ram_usage -gt 80 ]]; then 
+    elif [[ $ram_usage -gt 80 ]]; then
         mlogtime "WARNING: El uso de la memoria ha superado el 80%"
     fi
 }
 
-
-# Función para monitorear el uso del disco
+# Función para monitorear el almacenamiento del disco
 function DiskUsage {
     df -h | grep -E '^/dev/' | awk '{print $1 " " $5}' | while read line; do
         partition=$(echo $line | awk '{print $1}')
@@ -155,8 +144,8 @@ function DiskUsage {
     done
 }
 
+# Función para chequear los servicios del sistema mediante un archivo de configuración medido por niveles de criticidad
 function checkCritSrvcs {
-
     # Variables para el checker de servicios
     declare -A servcatlog
     CONFIG_FILE="/etc/mlogger/servcatlog.conf"
@@ -209,29 +198,24 @@ function checkCritSrvcs {
     fi
 }
 
-
 # Función para monitorear errores en los logs
 function checklogs {
     for log in "${!logfiles[@]}"; do
         echo "Buscando errores en ${log##*/}..."
         if [[ -f "$log" ]]; then
-            # Buscar errores en el archivo de log
-            errors=$(grep -i "${logfiles[$log]}" "$log")
+            # Buscar errores solo en las últimas 100 líneas para mejorar eficiencia
+            errors=$(tail -n 25 "$log" | grep -i "${logfiles[$log]}")
             if [[ -n "$errors" ]]; then
                 mlogtime "Errores en ${log##*/}"
-                # Mandar los errores a mlog con delimitador y descripción
                 echo "$errors" >> "$mlog"
-
-                # También mandamos los errores al logger con el nivel de error
                 mloggerflags 3 "Errores encontrados en ${log##*/}: $errors"
             fi
         else
-            continue # Si no encuentra el log, continúa
+            continue
         fi
     done
 }
 
-# ------ PRIORIDAD MEDIA ------
 # Función para mostrar el uso de la swap
 function swapusage {
     fswap=$(free -m | awk ' NR==3 {print $2}')
@@ -246,7 +230,6 @@ function swapusage {
 }
 
 # Función para obtener los procesos más "Contaminantes para el sistema" (Que mayor carga generan)
-
 function gethighprocess {
     ghpc=$(ps -eo pid,ppid,cmd,%cpu,%mem,time --sort=-%cpu | head -n 10)
     ghpm=$(ps -eo pid,ppid,cmd,%cpu,%mem,time --sort=-%mem | head -n 10)
@@ -263,38 +246,77 @@ function gethighprocess {
 } >> "$mlog"
 }
 
+# Función para obtener el uso de la red
 function netusage {
     checknet=$(ifstat -t 1 5)
     mlogtime "Estadísticas del uso de red (5 segundos atrás)"
     echo "$checknet" >> "$mlog"
 }
 
-function openports {
-    sopenports=$(nmap -sS -sU -p- localhost | sed -n '/PORT/,/Nmap scan report/{/Nmap scan report/!p}')
-    mlogtime "Escaneo de puertos y servicios usados"
-    echo "$sopenports" >> "$mlog"
+# Función para obtener conexiones entrantes y salientes con netstat o ss
+function getconnections {
+    getconnections=$(netstat -tulnp)
+    regs="/etc/mlogger/regs"
+    reg="$regs/netstat-$(date +'%Y%m%d_%H%M%S').log"
+
+    # Si no existe el directorio lo crea
+    if [ ! -d "$regs" ]; then 
+        mkdir -p "$regs"    
+    fi
+
+    {
+        echo "=== Registro de conexiones - $(date '+%Y-%m-%d %H:%M:%S') ==="; echo
+        echo "$getconnections"
+    } > "$reg"  # Redirigimos la salida al archivo de registro
+
+    mlogtime "Registro de conexiones entrantes y salientes realizado y guardado en $regs"
 }
 
-function checkbackupscron {
-    # Verificamos si hay cronjobs configurados para el sistema
-    cronjobs=$(crontab -l 2>/dev/null)
+# Función para obtener un mini registro de los puertos en uso 
+function openports {
+    # Ejecutamos el comando nmap para escanear puertos
+    sopenports=$(nmap -sS -sU -p- localhost | sed -n '/PORT/,/Nmap scan report/{/Nmap scan report/!p}')
 
-    # Si hay cronjobs, mandamos un mensaje con mlogtime
-    if [ -n "$cronjobs" ]; then
-        mlogtime "Se han encontrado cronjobs configurados en el sistema."
-    else
-        mlogtime "No se han encontrado cronjobs configurados en el sistema."
+    # Definimos el directorio de registros y el archivo de registro con la fecha
+    regs="/etc/mlogger/regs"
+    reg="$regs/openports-$(date +'%Y%m%d_%H%M%S').log"
+
+    # Verificamos si el directorio existe y lo creamos si no existe
+    if [ ! -d "$regs" ]; then
+        mkdir -p "$regs"  # Si no existe el directorio, lo creamos
+    fi
+
+    # Guardamos la salida de nmap en el archivo de registro con la fecha y hora
+    {
+        echo "=== Registro de escaneo de puertos - $(date '+%Y-%m-%d %H:%M:%S') ==="; echo
+        echo "$sopenports"
+    } > "$reg"  # Redirigimos la salida al archivo de registro
+
+    # Guardamos un mensaje de registro (sin mostrarlo en pantalla)
+    mlogtime "Escaneo de puertos y servicios realizados y guardados en $reg"
+}
+
+
+# Función que verifica si el cronjob de las copias de seguridad esta "vivo"
+function checkbackupscron {
+    cronjobmlogger="/etc/cron.d/mloggerbackups-cron"
+    if ! grep -q "$cronjobmlogger"; then 
+        mlogtime "El cronjob de las copias de seguridad no está o no se ha instalado"
+    else 
+        mlogtime "El cronjob de las copias de seguridad está activo"
     fi
 }
 
+# Función para actualizar y mejorar el sistema 
 function updatesystem {
     apt update && apt upgrade -y
     if [[ $? -ne 0 ]]; then
-    mlogtime "No se ha podido actualizar el sistema, por favor revise si hay bloqueos en dpkg"
+        mloggerflags 3 "ERROR: No se ha podido actualizar el sistema, por favor revise si hay bloqueos en dpkg"
+    else
+        mlogtime "SUCCESS: El sistema ha sido actualizado correctamente"
     fi
 }
 
-# ------ PRIORIDAD BAJA ------
 # Función para monitorear el tiempo activo del sistema
 function servuptimeuser {
     uptimeInfo=$(uptime -p)
@@ -347,27 +369,18 @@ function conectedusers {
     while true; do
 	updatesystem
     checkbackupscron
+    servuptimeuser
+    checklogs
+    conectedusers
 	sleep 86400
     done
 ) &
 
 (
     while true; do
-        checklogs
-        sleep 43200
-    done
-) &
-
-(
-    while true; do
-        servuptimeuser
-        sleep 3600
-    done
-) &
-
-(
-    while true; do
         openports
+        getconnections
+        netusage
         sleep 1800
     done
 ) &
@@ -375,25 +388,11 @@ function conectedusers {
 (
     while true; do
         connection
-        conectedusers
         checkCritSrvcs
         gethighprocess
         swapusage
-        sleep 900
-    done
-) &
-
-(
-    while true; do
         DiskUsage
-        sleep 300
-    done
-) &
-
-(
-    while true; do
-        netusage
-        sleep 180
+        sleep 900
     done
 ) &
 
