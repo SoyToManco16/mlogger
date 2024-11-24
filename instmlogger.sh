@@ -13,24 +13,29 @@ sclc="servcatlog.conf"
 readme="README.txt"
 cjp="/etc/cron.d/mloggerbackups-cron"   # Cronjob copias de seguridad
 sourcedest="$mbackups"              # Ruta del destino de las backups
+mlog="/var/log/mlog"               # Ruta del archivo de log que quieres rotar
+logrotate_conf="/etc/logrotate.d/mlogger"  # Configuración de logrotate para mlogger
 
 # Instalar dependencias
 echo "Instalando dependencias"
 sudo apt update
-sudo apt install util-linux dmidecode iputils-ping gawk procps bc coreutils bsdutils
+sudo apt install util-linux dmidecode iputils-ping gawk procps bc coreutils bsdutils logrotate -y
 clear
 
 echo "Preparando todo para usted, espere por favor :)"
 
-mkdir -p $etcm                  # Crear carpeta en etc
-mkdir -p $mscripts              # Crear carpeta de scripts en /etc/mlogger
-mkdir -p $
-cp "$readme" "$etcm"            # Copiar archivo README a /etc/mlogger
-cp "$sclc" "$etcm"              # Copiar archivo de configuración de servicios a /etc/mlogger
-cp mlogger.sh "$ulbp"           # Copiar script principal a /usr/local/bin
-chmod +x "$culbp"               # Dar permisos de ejecución a el script principal
+# Crear directorios necesarios si no existen
+mkdir -p "$etcm" "$mscripts" "$mbackups"  # Crear carpetas necesarias
 
-# Preguntar por si queremos habilitar el modo de copias de seguridad de mlogger
+# Copiar archivos a las rutas correspondientes
+cp "$readme" "$etcm" || { echo "Error al copiar README.txt"; exit 1; }
+cp "$sclc" "$etcm" || { echo "Error al copiar servcatlog.conf"; exit 1; }
+cp mlogger.sh "$ulbp" || { echo "Error al copiar mlogger.sh"; exit 1; }
+
+# Dar permisos de ejecución
+chmod +x "$culbp" || { echo "Error al dar permisos a mlogger.sh"; exit 1; }
+
+# Preguntar por las copias de seguridad automáticas
 read -p "¿Quieres habilitar las copias de seguridad automáticas? (s/n): " enablebackups
 if [[ "$enablebackups" == "s" || "$enablebackups" == "S" ]]; then
     # Verificar si el script de backup está presente
@@ -95,5 +100,23 @@ else
 fi
 
 systemctl start mlogger.service
+
+# Configuración de logrotate para el archivo de log de mlogger
+echo "Configurando logrotate para mlog"
+cat <<EOF | tee "$logrotate_conf" > /dev/null
+$mlog {
+    daily               # Rotar los logs diariamente
+    missingok           # No fallar si el log no existe
+    rotate 7            # Mantener 7 copias de seguridad de los logs
+    compress            # Comprimir los logs antiguos
+    delaycompress       # Comprimir solo después de la segunda rotación
+    notifempty          # No rotar si el log está vacío
+    create 0644 root root  # Crear nuevo log con permisos 644
+}
+EOF
+
+# Ejecutar logrotate manualmente para probar la configuración
+logrotate --debug "$logrotate_conf"
+
 echo "Instalación completada, disfrute de mlogger :)"
 clear
