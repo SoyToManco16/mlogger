@@ -1,5 +1,20 @@
 #!/bin/bash
 
+# Imprimir delimitadores
+function mlogdelimit {
+    local del=$1
+    local num=$2
+    printf '%*s\n' $num | tr ' ' "$del"
+    # Uso: mlgdelimit '*_-#' 50
+}
+
+# Meter datos en mlog
+mlogtime() {
+    mlogdelimit '_' 100 >> "$mlog"
+    echo >> "$mlog"
+    echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" >> "$mlog"
+}
+
 # Definir directorios (estos valores serán reemplazados por el script de instalación)
 origen="#ORIGEN_DIR#"
 destino="#DESTINO_DIR#"
@@ -21,7 +36,7 @@ fecha=$(date "+%Y-%m-%d")
 backupfile="backup-$fecha.tar.gz"
 
 # Realizamos la copia de seguridad utilizando tar
-echo "Realizando copia de seguridad de $origen a $destino/$backupfile..."
+mlogtime "Realizando copia de seguridad de $origen a $destino/$backupfile..."
 tar -czf "$destino/$backupfile" -C "$origen" .
 
 # Verificamos si el proceso de copia de seguridad fue exitoso
@@ -30,13 +45,3 @@ if [ $? -eq 0 ]; then
 else
     echo "Error al realizar la copia de seguridad."
 fi
-
-# Confirmamos el contenido del archivo tar.gz como paso adicional de validación
-echo "Verificando el contenido del archivo de respaldo..."
-if tar -tzf "$destino/$backupfile" > /dev/null; then
-    echo "El archivo de respaldo ha sido verificado correctamente."
-else
-    echo "Advertencia: Hubo un problema al verificar el archivo de respaldo."
-    exit 1
-fi
-
