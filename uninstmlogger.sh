@@ -3,7 +3,7 @@
 # Variables
 sysp="/etc/systemd/system"
 ulbp="/usr/local/bin"
-vlm="/var/log/mlog"
+vlm="/var/log/mlog" 
 culbp="$ulbp/mlogger.sh"
 bsp="$ulbp/mloggerbackups.sh"  # Script de backup
 cjp="/etc/cron.d/mloggerbackups-cron"  # Cronjob
@@ -18,7 +18,7 @@ rm -f "$sysp/mlogger.service"  # Eliminar el archivo del servicio
 # Recargar los servicios
 systemctl daemon-reload
 
-# Eliminar el cronjob si existe
+# Eliminar el cronjob en /etc/cron.d/
 if [ -f "$cjp" ]; then
     rm -f "$cjp"
     systemctl restart cron  # Reiniciar el cron para aplicar los cambios
@@ -27,6 +27,11 @@ fi
 # Eliminar el script de backups
 if [ -f "$bsp" ]; then
     rm -f "$bsp"
+fi
+
+# Eliminar el script principal
+if [ -f "$culbp" ]; then
+    rm -f "$culbp"
 fi
 
 # Renombrar mlog como antiguo si existe
@@ -41,18 +46,15 @@ if [[ -f "$vlm" ]]; then
     done
 
     # Renombrar el archivo con el nuevo nombre único
+    echo "Renombrando archivo de log a $newmlog..."
     mv "$vlm" "$newmlog"
-fi
-
-# Eliminar el script principal
-if [ -f "$culbp" ]; then
-    rm -f "$culbp"
 fi
 
 # Eliminar la carpeta de configuración y todos sus archivos (si existe)
 if [ -d "$etcm" ]; then
     read -p "¿Estás seguro de que deseas eliminar la carpeta de configuración '/etc/mlogger' y todo su contenido? (s/n): " confirm_delete
     if [[ "$confirm_delete" == "s" || "$confirm_delete" == "S" ]]; then
+        echo "Eliminando carpeta de configuración..."
         rm -rf "$etcm"  # Eliminar la carpeta y todo su contenido
     else
         echo "La carpeta '/etc/mlogger' no se ha eliminado."
@@ -63,4 +65,4 @@ fi
 
 # Finalizar
 echo "Desinstalación completada."
-clear
+
