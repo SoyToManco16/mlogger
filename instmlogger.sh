@@ -19,16 +19,14 @@ sudo apt install util-linux dmidecode iputils-ping gawk procps bc coreutils bsdu
 clear
 
 echo "Preparando todo para usted, espere por favor :)"
-mkdir -p /etc/mlogger/scripts
-cp "$readme" "$etcm" && cp "$sclc" "$etcm" || { echo "Error al copiar archivos"; exit 1; }
+mkdir -p $etcm                  # Crear carpeta en etc
+mkdir -p /etc/mlogger/scripts   # Crear carpeta de scripts en /etc/mlogger
+cp "$readme" "$etcm"            # Copiar archivo README a /etc/mlogger
+cp "$sclc" "$etcm"              # Copiar archivo de configuración de servicios a /etc/mlogger
+cp mlogger.sh "$ulbp"           # Copiar script principal a /usr/local/bin
+chmod +x "$culbp"               # Dar permisos de ejecución a el script principal
 
-# Comprobamos si el script principal mlogger.sh está en /usr/local/bin
-if [ ! -f "$culbp" ]; then
-    echo "Moviendo el script a $ulbp"
-    cp mlogger.sh "$ulbp" && chmod +x "$culbp" || { echo "Error al copiar mlogger.sh"; exit 1; }
-fi
-
-# Preguntar por las copias de seguridad
+# Preguntar por si queremos habilitar el modo de copias de seguridad de mlogger
 read -p "¿Quieres habilitar las copias de seguridad automáticas? (s/n): " enablebackups
 if [[ "$enablebackups" == "s" || "$enablebackups" == "S" ]]; then
     # Verificar si el script de backup está presente
