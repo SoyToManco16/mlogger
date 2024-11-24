@@ -3,9 +3,10 @@
 # Variables
 sysp="/etc/systemd/system"
 ulbp="/usr/local/bin"
-vlm="/var/log/mlog" 
+vlm="/var/log/mlog.log" 
 culbp="$ulbp/mlogger.sh"
 bsp="$ulbp/mloggerbackups.sh"  # Script de backup
+mbackups="$etcm/backups"
 cjp="/etc/cron.d/mloggerbackups-cron"  # Cronjob
 etcm="/etc/mlogger"  # Carpeta de configuración
 logrotate_conf="/etc/logrotate.d/mlogger"  # Configuración de logrotate
@@ -70,9 +71,11 @@ fi
 
 # Eliminar la carpeta de configuración y todos sus archivos (si existe)
 if [ -d "$etcm" ]; then
-    read -p "¿Estás seguro de que deseas eliminar la carpeta de configuración '/etc/mlogger' y todo su contenido? (s/n): " confirm_delete
+    read -p "¿Deseas eliminar la carpeta donde mlogger ha sido instalado (Las backups serán movidas a /home)? (s/n): " confirm_delete
     if [[ "$confirm_delete" == "s" || "$confirm_delete" == "S" ]]; then
-        echo "Eliminando carpeta de configuración..."
+        echo "Moviendo carpeta de las backups a /home"
+        mv "$mbackups" /home
+        echo "Eliminando carpeta mlogger"
         rm -rf "$etcm"  # Eliminar la carpeta y todo su contenido
     else
         echo "La carpeta '/etc/mlogger' no se ha eliminado."
