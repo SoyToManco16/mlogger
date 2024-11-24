@@ -8,6 +8,7 @@ culbp="$ulbp/mlogger.sh"
 bsp="$ulbp/mloggerbackups.sh"  # Script de backup
 cjp="/etc/cron.d/mloggerbackups-cron"  # Cronjob
 etcm="/etc/mlogger"  # Carpeta de configuración
+logrotate_conf="/etc/logrotate.d/mlogger"  # Configuración de logrotate
 
 # Eliminar el servicio
 echo "Deteniendo y deshabilitando el servicio mlogger..."
@@ -22,16 +23,33 @@ systemctl daemon-reload
 if [ -f "$cjp" ]; then
     rm -f "$cjp"
     systemctl restart cron  # Reiniciar el cron para aplicar los cambios
+    echo "Cronjob de backup eliminado."
+else
+    echo "No se encontró el cronjob de backup."
 fi
 
 # Eliminar el script de backups
 if [ -f "$bsp" ]; then
     rm -f "$bsp"
+    echo "Script de backup eliminado."
+else
+    echo "No se encontró el script de backup."
 fi
 
 # Eliminar el script principal
 if [ -f "$culbp" ]; then
     rm -f "$culbp"
+    echo "Script principal mlogger.sh eliminado."
+else
+    echo "No se encontró el script principal mlogger.sh."
+fi
+
+# Eliminar la configuración de logrotate
+if [ -f "$logrotate_conf" ]; then
+    rm -f "$logrotate_conf"
+    echo "Configuración de logrotate eliminada."
+else
+    echo "No se encontró la configuración de logrotate."
 fi
 
 # Renombrar mlog como antiguo si existe
@@ -65,4 +83,3 @@ fi
 
 # Finalizar
 echo "Desinstalación completada."
-
