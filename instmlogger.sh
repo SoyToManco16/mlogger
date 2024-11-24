@@ -8,9 +8,11 @@ servf="$sysp/mlogger.service"
 mbs="mloggerbackups.sh"
 etcm="/etc/mlogger"
 mscripts="$etcm/scripts"
+mbackups="$etcm/backups"
 sclc="servcatlog.conf"
 readme="README.txt"
-cjp="/etc/cron.d/mloggerbackups-cron"
+cjp="/etc/cron.d/mloggerbackups-cron"   # Cronjob copias de seguridad
+sourcedest="$mbackups"              # Ruta del destino de las backups
 
 # Instalar dependencias
 echo "Instalando dependencias"
@@ -19,8 +21,10 @@ sudo apt install util-linux dmidecode iputils-ping gawk procps bc coreutils bsdu
 clear
 
 echo "Preparando todo para usted, espere por favor :)"
+
 mkdir -p $etcm                  # Crear carpeta en etc
-mkdir -p /etc/mlogger/scripts   # Crear carpeta de scripts en /etc/mlogger
+mkdir -p $mscripts              # Crear carpeta de scripts en /etc/mlogger
+mkdir -p $
 cp "$readme" "$etcm"            # Copiar archivo README a /etc/mlogger
 cp "$sclc" "$etcm"              # Copiar archivo de configuración de servicios a /etc/mlogger
 cp mlogger.sh "$ulbp"           # Copiar script principal a /usr/local/bin
@@ -36,12 +40,12 @@ if [[ "$enablebackups" == "s" || "$enablebackups" == "S" ]]; then
     fi
 
     # Solicitar directorios de backup
+    echo "Las copias de seguridad se guardan en $mbackups"
     read -p "Introduce el directorio de origen para las copias de seguridad: " sourcedir
-    read -p "Introduce el directorio de destino para las copias de seguridad: " sourcedest
 
     # Validación de directorios
     if [[ ! -d "$sourcedir" || ! -d "$sourcedest" ]]; then
-        echo "Uno de los directorios no existe. Saliendo..."
+        echo "El directorio no existe. Saliendo..."
         exit 1
     fi
 
