@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Variables globales
-mlog="/var/log/mlog"
+mlog="/var/log/mlog.log"
 LOCKFILE="/tmp/mlogger.lock"
 
 # ---------- COMIENZO DEL SCRIPT ----------
@@ -293,7 +293,7 @@ function openports {
     } > "$reg"  # Redirigimos la salida al archivo de registro
 
     # Guardamos un mensaje de registro (sin mostrarlo en pantalla)
-    mlogtime "Escaneo de puertos y servicios realizados y guardados en $reg"
+    mlogtime "Escaneo de puertos y servicios realizado y guardado en $reg"
 }
 
 
