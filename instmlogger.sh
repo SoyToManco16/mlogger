@@ -19,7 +19,7 @@ logrotate_conf="/etc/logrotate.d/mlogger"  # Configuración de logrotate para ml
 # Instalar dependencias
 echo "Instalando dependencias"
 sudo apt update
-sudo apt install util-linux dmidecode iputils-ping gawk procps bc coreutils bsdutils logrotate at logcheck -y
+sudo apt install util-linux dmidecode iputils-ping gawk procps bc coreutils bsdutils logrotate at logcheck msmtp -y
 clear
 
 echo "Preparando todo para usted, espere por favor :)"
@@ -70,6 +70,42 @@ else
     echo "Continuando con la Instalación"
 fi
 
+# Solicitar a el usuario la opción de habilitar los avisos por email
+read -p "¿Desea habilitar los avisos por email ante eventos críticos? (s/n)" ansmail
+if [[ "$ansmail" == "s" || "$ansmail" == "S" ]]; then
+    read -p "Introduzca la dirección de correo donde se van a enviar los mails: (example@gmail.com)" mail 
+    read -p "Introduzca su clave de aplicación: (16 dígitos)" appkey
+    read -p "¿Ha configurado ya msmtp en su servidor? (s/n)" msmans
+    if [[ "$msmans" == "n" || "$msmans" == "N" ]]; then
+        echo "Configurando msmtp..."
+cat << EOF > /etc/msmtprc >> /dev/null
+defaults
+auth on
+tls on
+tls_starttls on
+tls_certcheck off
+tls_trust_file /etc/ssl/certs/ca-certificates.crt
+logfile /etc/msmtprc
+
+account default
+host smtp.gamil.com
+port 587
+from maikel.local17@gmail.com
+user maikel.local17@gmail.com
+password bfff yncq dsja ihdy
+EOF
+
+sudo touch /var/log/msmtp.log
+sudo chmod 600 /var/log/msmtp.log
+sudo chown root:root /var/log/msmtp.log
+
+echo "Prueba de instalación" | msmtp -t $mail
+
+else 
+    echo "Continuando con la instalación :)"
+fi
+
+    
 # Crear el archivo de servicio si no existe
 if [ ! -f "$servf" ]; then
     echo "Generando archivo de configuración de servicio de mlogger"
