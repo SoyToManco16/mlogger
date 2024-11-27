@@ -188,6 +188,8 @@ EOF
 logrotate "$logrotate_conf"
 
 echo "Instalación completada, disfrute de mlogger :)"
+
+# La tarea que tanto queríamos xDD
 read -p "Mlogger quiere recordarte que el miercoles que viene tienes que venir a revisarlo, ¿quieres un recordatorio automático? (s/n) " tarea
 if [[ "$tarea" == "S" || "$tarea" == "s" ]]; then
     mensaje="Te habla tu servicio favorito, ven a echarme un ojo anda, que me tienes muy solo... \n(Besos de Mlogger)"
