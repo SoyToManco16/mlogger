@@ -77,6 +77,10 @@ if [[ "$ansmail" == "s" || "$ansmail" == "S" ]]; then
     read -p "¿Ha configurado ya msmtp en su servidor? (s/n)" msmans
     if [[ "$msmans" == "n" || "$msmans" == "N" ]]; then
         echo "Configurando msmtp..."
+            sudo touch /etc/msmtprc
+            sudo chmod 600 /etc/msmtprc
+            sudo chown root:root /etc/msmtprc
+            
 cat << EOF > /etc/msmtprc 
 defaults
 auth on
