@@ -75,7 +75,11 @@ fi
 # Solicitar al usuario habilitar los avisos por email
 read -p "¿Desea habilitar los avisos por email ante eventos críticos? (s/n): " ansmail
 if [[ "$ansmail" == "s" || "$ansmail" == "S" ]]; then
-    read -p "Introduzca la dirección de correo donde se enviarán los avisos (example@gmail.com): " mail 
+    read -p "Introduzca la dirección de correo donde se enviarán los avisos (example@gmail.com): " mail
+    if [[ -z "$mail" ]]; then
+        echo "No se ha introducido ningún mail, desertando..."; exit 1
+    fi
+    sed -i "s/^#mail=${mail}/" "$culbp"
     read -p "¿Ha configurado ya msmtp en su servidor? (s/n): " msmans
 
     if [[ "$msmans" == "n" || "$msmans" == "N" ]]; then
