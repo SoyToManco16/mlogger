@@ -3,6 +3,8 @@
 # Variables globales
 mlog="/var/log/mlog.log"
 LOCKFILE="/tmp/mlogger.lock"
+# En caso de que se activen los avisos por mail :)
+#mail= 
 
 # ---------- COMIENZO DEL SCRIPT ----------
 
