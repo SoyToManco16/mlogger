@@ -81,7 +81,7 @@ if [[ "$ansmail" == "s" || "$ansmail" == "S" ]]; then
     fi
     
     # Desmarcamos la variable de la configuración de los emails
-    sed -i "s/#mail=.*/mail=$mail/" "$culbp"
+    sed -i "s|#mail=.*|mail=\"$mail\"|" "$culbp"
     read -p "¿Ha configurado ya msmtp en su servidor? (s/n): " msmans
 
     if [[ "$msmans" == "n" || "$msmans" == "N" ]]; then
