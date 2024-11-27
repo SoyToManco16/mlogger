@@ -14,7 +14,7 @@ Si habilitamos el script de copias de seguridad, este nos permite crear copias d
 y las guardará en programa tar.gz.
 
 Si queremos habilitar los avisos por correo electrónico se nos pedirá un correo a la hora de la instalación.
-Por ahora solo soportamos correos basados en gmail :(.
+Por ahora solo soportamos correos basados en gmail :( usando msmtp.
 
 Para más detalles lea la documentación del proyecto.
 Con cariño de SoyToManco16 :)
