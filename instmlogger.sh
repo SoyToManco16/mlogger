@@ -74,7 +74,6 @@ fi
 read -p "¿Desea habilitar los avisos por email ante eventos críticos? (s/n)" ansmail
 if [[ "$ansmail" == "s" || "$ansmail" == "S" ]]; then
     read -p "Introduzca la dirección de correo donde se van a enviar los mails: (example@gmail.com)" mail 
-    read -p "Introduzca su clave de aplicación: (16 dígitos)" appkey
     read -p "¿Ha configurado ya msmtp en su servidor? (s/n)" msmans
     if [[ "$msmans" == "n" || "$msmans" == "N" ]]; then
         echo "Configurando msmtp..."
