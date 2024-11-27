@@ -154,7 +154,7 @@ $mlog {
 EOF
 
 # Ejecutar logrotate manualmente para probar la configuración
-logrotate --debug "$logrotate_conf"
+logrotate "$logrotate_conf"
 
 echo "Instalación completada, disfrute de mlogger :)"
 clear
