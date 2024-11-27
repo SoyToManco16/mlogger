@@ -79,7 +79,9 @@ if [[ "$ansmail" == "s" || "$ansmail" == "S" ]]; then
     if [[ -z "$mail" ]]; then
         echo "No se ha introducido ningún mail, desertando..."; exit 1
     fi
-    sed -i "s/^#mail=${mail}/" "$culbp"
+    
+    # Desmarcamos la variable de la configuración de los emails
+    sed -i "s/#mail=.*/mail=$mail/" "$culbp"
     read -p "¿Ha configurado ya msmtp en su servidor? (s/n): " msmans
 
     if [[ "$msmans" == "n" || "$msmans" == "N" ]]; then
