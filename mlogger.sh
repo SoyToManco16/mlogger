@@ -307,16 +307,6 @@ function checkbackupscron {
     fi
 }
 
-# Función para actualizar y mejorar el sistema 
-function updatesystem {
-    apt update && apt upgrade -y
-    if [[ $? -ne 0 ]]; then
-        mloggerflags 3 "ERROR: No se ha podido actualizar el sistema, por favor revise si hay bloqueos en dpkg"
-    else
-        mlogtime "SUCCESS: El sistema ha sido actualizado correctamente"
-    fi
-}
-
 # Función para monitorear el tiempo activo del sistema
 function servuptimeuser {
     uptimeInfo=$(uptime -p)
@@ -367,7 +357,6 @@ function conectedusers {
 # Monitoreo en bucles separados
 (
     while true; do
-	updatesystem
     checkbackupscron
     servuptimeuser
     checklogs
