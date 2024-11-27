@@ -70,45 +70,70 @@ else
     echo "Continuando con la Instalación"
 fi
 
-# Solicitar a el usuario la opción de habilitar los avisos por email
-read -p "¿Desea habilitar los avisos por email ante eventos críticos? (s/n)" ansmail
+#!/bin/bash
+
+# Solicitar al usuario habilitar los avisos por email
+read -p "¿Desea habilitar los avisos por email ante eventos críticos? (s/n): " ansmail
 if [[ "$ansmail" == "s" || "$ansmail" == "S" ]]; then
-    read -p "Introduzca la dirección de correo donde se van a enviar los mails: (example@gmail.com)" mail 
-    read -p "¿Ha configurado ya msmtp en su servidor? (s/n)" msmans
+    read -p "Introduzca la dirección de correo donde se enviarán los avisos (example@gmail.com): " mail 
+    read -p "¿Ha configurado ya msmtp en su servidor? (s/n): " msmans
+
     if [[ "$msmans" == "n" || "$msmans" == "N" ]]; then
         echo "Configurando msmtp..."
-            sudo touch /etc/msmtprc
-            sudo chmod 600 /etc/msmtprc
-            sudo chown root:root /etc/msmtprc
-            
-cat << EOF > /etc/msmtprc 
+
+        # Verificar si msmtp está instalado
+        if ! command -v msmtp &> /dev/null; then
+            echo "msmtp no está instalado. Instalándolo ahora..."
+            sudo apt update && sudo apt install -y msmtp
+        fi
+
+        # Verificar si los certificados CA están instalados
+        if [[ ! -f /etc/ssl/certs/ca-certificates.crt ]]; then
+            echo "Los certificados CA no están instalados. Instalándolos ahora..."
+            sudo apt update && sudo apt install -y ca-certificates
+        fi
+
+        # Crear archivo de configuración de msmtp
+        sudo touch /etc/msmtprc
+        sudo chmod 600 /etc/msmtprc
+        sudo chown root:root /etc/msmtprc
+        
+        cat << EOF | sudo tee /etc/msmtprc > /dev/null
 defaults
 auth on
 tls on
 tls_starttls on
 tls_certcheck off
 tls_trust_file /etc/ssl/certs/ca-certificates.crt
-logfile /etc/msmtprc
+logfile /var/log/msmtp.log
 
 account default
-host smtp.gamil.com
+host smtp.gmail.com
 port 587
 from maikel.local17@gmail.com
 user maikel.local17@gmail.com
 password bfff yncq dsja ihdy
 EOF
 
-sudo touch /var/log/msmtp.log
-sudo chmod 600 /var/log/msmtp.log
-sudo chown root:root /var/log/msmtp.log
+        # Crear archivo de log para msmtp
+        sudo touch /var/log/msmtp.log
+        sudo chmod 600 /var/log/msmtp.log
+        sudo chown root:root /var/log/msmtp.log
 
-echo "Prueba de instalación" | msmtp -t $mail
-fi
+        # Prueba de envío de correo
+        echo -e "To: $mail\nSubject: Prueba de configuración de msmtp\n\nEste es un mensaje de prueba." | msmtp -t
+        if [[ $? -eq 0 ]]; then
+            echo "Correo de prueba enviado correctamente a $mail."
+        else
+            echo "Error al enviar el correo de prueba. Revisa la configuración."
+        fi
+    else
+        echo "msmtp ya está configurado. Continuando..."
+    fi
 else 
     echo "Continuando con la instalación :)"
 fi
 
-    
 # Crear el archivo de servicio si no existe
 if [ ! -f "$servf" ]; then
     echo "Generando archivo de configuración de servicio de mlogger"
