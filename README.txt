@@ -13,5 +13,9 @@ Servicios no muy críticos: service=2
 Si habilitamos el script de copias de seguridad, este nos permite crear copias de seguridad de un directorio que especifiquemos
 y las guardará en programa tar.gz.
 
+Si queremos habilitar los avisos por correo electrónico se nos pedirá un correo a la hora de la instalación.
+Por ahora solo soportamos correos basados en gmail :(.
+
 Para más detalles lea la documentación del proyecto.
 Con cariño de SoyToManco16 :)
+
