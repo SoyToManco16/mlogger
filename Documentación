@@ -9,26 +9,24 @@ Mlogger se basa en un abanico de prioridades a la hora de monitorear distintos e
 Existen prioridades altas, medias y bajas y a parte prioridades opcionales.
 
 PRIORIDAD ALTA: 
-Uso de la CPU. OK!!
-Uso de la Memoria RAM (MiB Mem). OK!!
-Espacio en disco. OK!!
-Servicios críticos. OK!!
-Supervisión de logs del sistema como (syslog, dmesg, audit.log…). OK!!
-Estado de backups. OK !! /
-Copias de seguridad OK!!
+Uso de la CPU. 
+Uso de la Memoria RAM (MiB Mem). 
+Espacio en disco. 
+Servicios críticos. 
+Supervisión de logs del sistema como (syslog, dmesg, audit.log…). 
+Copias de seguridad.
 
 PRIORIDAD MEDIA:
-Uso de la SWAP. OK!!
-Uso de la RED. OK!!
-Procesos que más CPU y MEM consumen. OK!!
+Uso de la SWAP.
+Uso de la RED. 
+Procesos que más CPU y MEM consumen. 
 Conexiones entrantes y salientes. 
-Puertos abiertos y en funcionamiento nmap. OK!!
-Actualizaciones del sistema. OK !! 
-Errores de hardware (Discos y Memoria). /
+Puertos abiertos y en funcionamiento nmap.
 
 PRIORIDAD BAJA:
-Integridad de los archivos.
-Monitoreo de usuarios conectados. OK !!
+Check para ver si las copias de seguridad están vivas (Activable)
+Tiempo del servidor activo.
+Monitoreo de usuarios conectados.
 
 
 ¿Cómo funciona el script?
