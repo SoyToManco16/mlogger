@@ -19,7 +19,7 @@ logrotate_conf="/etc/logrotate.d/mlogger"  # Configuración de logrotate para ml
 # Instalar dependencias
 echo "Instalando dependencias"
 sudo apt update
-sudo apt install util-linux dmidecode iputils-ping gawk procps bc coreutils bsdutils logrotate at logcheck msmtp -y
+sudo apt install util-linux iputils-ping gawk procps bc coreutils bsdutils logrotate at logcheck msmtp -y
 clear
 
 echo "Preparando todo para usted, espere por favor :)"
@@ -99,7 +99,7 @@ sudo chmod 600 /var/log/msmtp.log
 sudo chown root:root /var/log/msmtp.log
 
 echo "Prueba de instalación" | msmtp -t $mail
-
+fi
 else 
     echo "Continuando con la instalación :)"
 fi
