@@ -188,4 +188,12 @@ EOF
 logrotate "$logrotate_conf"
 
 echo "Instalación completada, disfrute de mlogger :)"
+read -p "Mlogger quiere recordarte que el miercoles que viene tienes que venir a revisarlo, ¿quieres un recordatorio automático? (s/n) " tarea
+if [[ "$tarea" == "S" || "$tarea" == "s" ]]; then
+    mensaje="Te habla tu servicio favorito, ven a echarme un ojo anda, que me tienes muy solo... \n(Besos de Mlogger)"
+    nextwed=$(date -d "next Wednesday" '+%H:%M %b %d')
+    echo -e "echo -e '$mensaje'" | msmtp $mail | at $nextwed
+else 
+    echo "Pues na, hasta luego"
+fi
 
