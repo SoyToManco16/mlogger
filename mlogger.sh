@@ -8,6 +8,15 @@ LOCKFILE="/tmp/mlogger.lock"
 
 # ---------- COMIENZO DEL SCRIPT ----------
 
+# Enviar mails en caso de urgencia
+function mlogmail() {
+# Para usar esta función introducimos un asunto más un mensaje y luego llamamos a la función con estas variables
+    local asunto=$1
+    local mensaje=$2
+# Ejemplo de uso asunto="CRIT" mensaje="Tacho nene el server" mlogmail "$asunto" "$mensaje"
+    echo -e "Subject: $asunto\n\n$mensaje" | msmtp $mail
+}
+
 # Imprimir delimitadores
 function mlogdelimit {
     local del=$1
@@ -15,6 +24,31 @@ function mlogdelimit {
     printf '%*s\n' $num | tr ' ' "$del"
     # Uso: mlgdelimit '*_-#' 50
 }
+
+# Función para agregar la hora al log
+function mlogtime() {
+    mlogdelimit '_' 100 >> "$mlog"
+    echo >> "$mlog"
+    echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" >> "$mlog"
+}
+
+# Función para 'Flaggear' los eventos que van al logger
+function mloggerflags {
+    local nivel=$1
+    local flag=$2
+
+    case "$nivel" in
+        0) logger -p user.emerg "$flag";; 	# Pánico en el sistema
+        1) logger -p user.alert "$flag";; 	# Alerta
+        2) logger -p user.crit "$flag";; 	# Crítico
+        3) logger -p user.err "$flag";; 	# Error
+        4) logger -p user.warning "$flag";; 	# Advertencia
+        5) logger -p user.notice "$flag";; 	# Aviso
+        6) logger -p user.info "$flag";; 	# Información
+        7) logger -p user.debug "$flag";; 	# Depuración
+    esac
+}
+
 
 # Diccionario de archivos de registros
 declare -A logfiles=(
@@ -48,29 +82,6 @@ fi
 touch "$LOCKFILE"
 trap 'rm -f $LOCKFILE; exit' EXIT SIGINT SIGTERM
 
-# Función para agregar la hora al log
-mlogtime() {
-    mlogdelimit '_' 100 >> "$mlog"
-    echo >> "$mlog"
-    echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" >> "$mlog"
-}
-
-# Función para 'Flaggear' los eventos que van al logger
-function mloggerflags {
-    local nivel=$1
-    local flag=$2
-
-    case "$nivel" in
-        0) logger -p user.emerg "$flag";; 	# Pánico en el sistema
-        1) logger -p user.alert "$flag";; 	# Alerta
-        2) logger -p user.crit "$flag";; 	# Crítico
-        3) logger -p user.err "$flag";; 	# Error
-        4) logger -p user.warning "$flag";; # Advertencia
-        5) logger -p user.notice "$flag";; 	# Aviso
-        6) logger -p user.info "$flag";; 	# Información
-        7) logger -p user.debug "$flag";; 	# Depuración
-    esac
-}
 
 # ---------- COMIENZO DEL SCRIPT DE MONITOREO ----------
 
@@ -105,7 +116,13 @@ function CPUsage {
     cpu_usage=$((100 * (cpu_diff - idle_diff) / cpu_diff))
 
     if [[ $cpu_usage -gt 90 ]]; then
-        mloggerflags 2 "CRITICAL: El uso de la CPU ha sobrepasado el 90%, por favor revise el servidor"
+    # Avisar por email
+    	asunto="EVENTO CRÍTICO: USO DE CPU"
+     	mensaje="El uso de la CPU ha sobrepasado el límite del 90%, ve cagando leches"
+      	mlogmail "$asunto" "$mensaje"
+       
+    # Avisar por syslog 
+        mloggerflags 1 "ALERTA: El uso de la CPU ha sobrepasado el 90%, por favor revise el servidor"
     elif [[ $cpu_usage -gt 80 ]]; then
         mlogtime "WARNING: El uso de la CPU ha sobrepasado el 80%"
     fi
@@ -121,7 +138,13 @@ function RAMUsage {
     ram_usage=$((100 * used_memory_mb / total_memory_mb))
 
     if [[ $ram_usage -gt 90 ]]; then
-        mloggerflags 2 "CRITICAL: El uso de la memoria ha superado el 90%!!"
+    # Avisar por mail
+    asunto="ERROR CRÍTICO: USO DE RAM"
+    mensaje="El uso de la RAM ha sobrepasado el límite del 90%, ve cagando leches"
+    mlogmail "$asunto" "$mensaje"
+       
+    # Avisar por syslog
+        mloggerflags 1 "ALERT: El uso de la memoria ha superado el 90%!!"
     elif [[ $ram_usage -gt 80 ]]; then
         mlogtime "WARNING: El uso de la memoria ha superado el 80%"
     fi
@@ -134,8 +157,20 @@ function DiskUsage {
         usage=$(echo $line | awk '{print $2}' | sed 's/%//')
         if [[ ! -z "$usage" && "$usage" =~ ^[0-9]+$ ]]; then
             if [[ $usage -gt 95 ]]; then
+	    # Avisar por mail
+    	    	asunto="PROBLEMA DE ALMACENAMIENTO: ALMACENAMIENTO COLAPSADO"
+            	mensaje="El disco duro ha sobrepasado el índice del 95%, VE ECHANDO RAYOS"
+            	mlogmail "$asunto" "$mensaje"
+	     
+	    # Avisar por syslog
                 mloggerflags 0 "PANIC: El uso del disco en $partition ha sobrepasado el 95%, por favor revise el servidor"
             elif [[ $usage -gt 90 ]]; then
+	    # Avisar por mail
+    	    	asunto="PROBLEMA DE ALMACENAMIENTO: ALMACENAMIENTO CASI LLENO"
+            	mensaje="El disco duro ha sobrepasado el índice del 90%, revisar urgente"
+            	mlogmail "$asunto" "$mensaje"
+	     
+	    # Avisar por syslog
                 mloggerflags 1 "ALERT: El uso del disco en $partition ha sobrepasado el 90%, por favor revise el servidor"
             elif [[ $usage -gt 80 ]]; then
                 mlogtime "WARNING: El uso del disco en $partition ha sobrepasado el 80%"
@@ -155,7 +190,7 @@ function checkCritSrvcs {
 
     # Verificar si el archivo de configuración existe
     if [[ ! -f "$CONFIG_FILE" ]]; then
-        mloggerflags 2 "ERROR: El archivo de configuración $CONFIG_FILE no se encuentra. No se están analizando los servicios." 
+        mloggerflags 3 "ERROR: El archivo de configuración $CONFIG_FILE no se encuentra. No se están analizando los servicios." 
         exit 1
     fi
 
@@ -181,8 +216,12 @@ function checkCritSrvcs {
         else
             # Solo registrar los servicios inactivos en el log
             case "$level" in
-                0)
+                0)  # Avisar por syslog
                     mloggerflags 0 "CRITICAL: El servicio $service está detenido o fallando."
+		    # Avisar por mail
+    	    		asunto="SERVICIO CAIDO O FAILED"
+            		mensaje="El servicio $service se ha caido o está fallando, acuda a el servidor"
+            		mlogmail "$asunto" "$mensaje"
                     ;;
                 1)
                     mloggerflags 1 "ALERT: El servicio $service no está activo."
