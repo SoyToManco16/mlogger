@@ -182,4 +182,4 @@ EOF
 logrotate "$logrotate_conf"
 
 echo "Instalación completada, disfrute de mlogger :)"
-clear
+
