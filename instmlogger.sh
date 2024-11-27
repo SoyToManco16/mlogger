@@ -77,7 +77,7 @@ if [[ "$ansmail" == "s" || "$ansmail" == "S" ]]; then
     read -p "¿Ha configurado ya msmtp en su servidor? (s/n)" msmans
     if [[ "$msmans" == "n" || "$msmans" == "N" ]]; then
         echo "Configurando msmtp..."
-cat << EOF > /etc/msmtprc >> /dev/null
+cat << EOF > /etc/msmtprc 
 defaults
 auth on
 tls on
