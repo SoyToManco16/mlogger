@@ -56,19 +56,14 @@ if [[ "$enablebackups" == "s" || "$enablebackups" == "S" ]]; then
     cp "$mbs" "$mscripts" && chmod +x "$mscripts/mloggerbackups.sh"
     sed -i "s|#ORIGEN_DIR#|$sourcedir|g" "$mscripts/mloggerbackups.sh"
     sed -i "s|#DESTINO_DIR#|$sourcedest|g" "$mscripts/mloggerbackups.sh"
-    
+
     # Crear cronjob si no existe
-    if ! grep -q "$mscripts/mloggerbackups.sh" "$cjp"; then
+    if ! grep -q "$mscripts/mloggerbackups.sh" "$cjp" >/dev/null 2>&1; then
         echo "0 3 * * * root $mscripts/mloggerbackups.sh" > "$cjp"
         systemctl restart cron
     else
         echo "El cronjob ya está configurado."
     fi
-else
-    echo "Continuando con la Instalación"
-fi
-
-#!/bin/bash
 
 # Solicitar al usuario habilitar los avisos por email
 read -p "¿Desea habilitar los avisos por email ante eventos críticos? (s/n): " ansmail
@@ -187,13 +182,14 @@ logrotate "$logrotate_conf"
 
 echo "Instalación completada, disfrute de mlogger :)"
 
-# La tarea que tanto queríamos xDD
+# La tarea con at
 read -p "Mlogger quiere recordarte que el miércoles que viene tienes que venir a revisarlo, ¿quieres un recordatorio automático? (s/n) " tarea
 if [[ "$tarea" == "S" || "$tarea" == "s" ]]; then
     mensaje='Te habla tu servicio favorito, ven a echarme un ojo anda, que me tienes muy solo... \n(Besos de Mlogger)'
-    nextwed=$(date -d "next Wednesday" '+%H:%M %b %d')
-    echo "echo -e '$mensaje' | msmtp $mail" | at "$nextwed"
+    nextwed=$(date -d "next Wednesday" '+%H:%M %Y-%m-%d')
+    echo "echo -e \"$mensaje\" | msmtp $mail" | at "$nextwed"
 else 
     echo "Pues na, hasta luego"
 fi
+
 
