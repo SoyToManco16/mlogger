@@ -18,7 +18,7 @@ logrotate_conf="/etc/logrotate.d/mlogger"  # Configuración de logrotate para ml
 # Instalar dependencias
 echo "Instalando dependencias"
 sudo apt update
-sudo apt install util-linux iputils-ping gawk procps bc coreutils bsdutils logrotate at ifstat logcheck msmtp -y
+sudo apt install -y msmtp logger net-tools nmap bc ifstat cron rsyslog bind9 kea-dhcp4-server ufw apparmor snapd cups gawk sed grep coreutils -y
 clear
 
 echo "Preparando todo para usted, espere por favor :)"
