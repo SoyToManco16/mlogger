@@ -187,13 +187,10 @@ function checkCritSrvcs {
         [cron]=0
         [rsyslog]=0
         [systemd-journald]=0
+	[bind9]=0
+ 	[kea-dhcp4-server]=0
         [ufw]=0
-        [mysql]=0
-        [apache2]=1
         [apparmor]=1
-        [zabbix-server]=1
-        [zabbix-agent]=1
-        [docker]=2
         [snapd]=2
         [cups]=2
     )
