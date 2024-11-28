@@ -69,20 +69,40 @@ if [[ -f "$vlm" ]]; then
     mv "$vlm" "$newmlog"
 fi
 
-# Eliminar la carpeta de configuración y todos sus archivos (si existe)
 if [ -d "$etcm" ]; then
     read -p "¿Deseas eliminar la carpeta donde mlogger ha sido instalado (Las backups serán movidas a /home)? (s/n): " confirm_delete
     if [[ "$confirm_delete" == "s" || "$confirm_delete" == "S" ]]; then
         echo "Moviendo carpeta de las backups a /home"
-        mv "$mbackups" /home
-        echo "Eliminando carpeta mlogger"
-        rm -rf "$etcm"  # Eliminar la carpeta y todo su contenido
+
+        # Asegurarse de que /home existe
+        if [ ! -d "/home" ]; then
+            echo "Directorio /home no encontrado, creando..."
+            mkdir /home
+        fi
+
+        # Comprobar si el directorio de copias de seguridad ya existe en /home
+        if [ -d "/home/$(basename "$mbackups")" ]; then
+            echo "El directorio de copias de seguridad ya existe en /home, renombrando..."
+            mv "$mbackups" "/home/$(basename "$mbackups")_backup_$(date +%F_%T)"
+        else
+            mv "$mbackups" /home
+        fi
+
+        # Comprobar si el movimiento se realizó correctamente
+        if [ -d "/home/$(basename "$mbackups")" ]; then
+            echo "Carpeta de copias de seguridad movida correctamente a /home."
+            echo "Eliminando carpeta mlogger"
+            rm -rf "$etcm"  # Eliminar la carpeta y todo su contenido
+        else
+            echo "Error al mover la carpeta de copias de seguridad. La carpeta mlogger no se ha eliminado."
+        fi
     else
         echo "La carpeta '/etc/mlogger' no se ha eliminado."
     fi
 else
     echo "No se encontró la carpeta '/etc/mlogger'."
 fi
+
 
 # Finalizar
 echo "Desinstalación completada."
