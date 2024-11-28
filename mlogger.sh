@@ -50,6 +50,20 @@ function mloggerflags {
 }
 
 
+# Diccionario de servicios
+# Uso: [service]=[0-2]
+declare -A servcatlog=(
+    [cron]=0
+    [rsyslog]=0
+    [systemd-journald]=0
+    [bind9]=0
+    [kea-dhcp4-server]=0
+    [ufw]=0
+    [apparmor]=1
+    [snapd]=2
+    [cups]=2
+)
+
 # Diccionario de archivos de registros
 declare -A logfiles=(
     ["/var/log/syslog"]="error",
@@ -183,17 +197,7 @@ function DiskUsage {
 
 # Función para verificar los servicios críticos
 function checkCritSrvcs {
-    declare -A servcatlog=(
-        [cron]=0
-        [rsyslog]=0
-        [systemd-journald]=0
-	[bind9]=0
- 	[kea-dhcp4-server]=0
-        [ufw]=0
-        [apparmor]=1
-        [snapd]=2
-        [cups]=2
-    )
+
     active_services=()  # Reiniciar el array de servicios activos
 
     for service in "${!servcatlog[@]}"; do
