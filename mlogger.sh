@@ -181,15 +181,14 @@ function DiskUsage {
     done
 }
 
-# Función para chequear los servicios del sistema mediante un archivo de configuración medido por niveles de criticidad
+# Función para verificar los servicios críticos
 function checkCritSrvcs {
-    # Variables para el checker de servicios
     declare -A servcatlog=(
         [cron]=0
         [rsyslog]=0
         [systemd-journald]=0
         [ufw]=0
-        [mysql]=1
+        [mysql]=0
         [apache2]=1
         [apparmor]=1
         [zabbix-server]=1
@@ -198,29 +197,27 @@ function checkCritSrvcs {
         [snapd]=2
         [cups]=2
     )
-    active_services=()  # Array para almacenar servicios activos
+    active_services=()  # Reiniciar el array de servicios activos
 
-    # Iterar sobre los servicios definidos en el array asociativo
     for service in "${!servcatlog[@]}"; do
-        local level="${servcatlog[$service]}"
+        level="${servcatlog[$service]}"
+        echo "DEBUG: Verificando servicio $service (nivel $level)"
 
-        # Verificar si el servicio está instalado
         if ! systemctl show "$service" --no-pager > /dev/null 2>&1; then
             mlogtime "INFO: El servicio $service no está instalado o no se puede verificar."
             continue
         fi
 
-        # Verificar si el servicio está activo
         if systemctl is-active --quiet "$service"; then
-            active_services+=("$service")  # Añadir a la lista de activos
+            active_services+=("$service")
+            echo "DEBUG: $service está activo."
         else
-            # Solo registrar los servicios inactivos en el log
+            echo "DEBUG: $service está detenido. Procesando según criticidad ($level)."
             case "$level" in
-                0)  # Avisar por syslog
+                0)
                     mloggerflags 0 "CRITICAL: El servicio $service está detenido o fallando."
-                    # Avisar por mail
-                    asunto="SERVICIO CAIDO O FAILED"
-                    mensaje="El servicio $service se ha caído o está fallando, acuda al servidor"
+                    asunto="SERVICIO CRÍTICO FALLANDO"
+                    mensaje="El servicio $service está caído o fallando. Acuda al servidor."
                     mlogmail "$asunto" "$mensaje"
                     ;;
                 1)
@@ -233,7 +230,6 @@ function checkCritSrvcs {
         fi
     done
 
-    # Mostrar solo los servicios activos
     if [[ ${#active_services[@]} -gt 0 ]]; then
         mlogtime "SUCCESS: Los servicios ${active_services[*]} están activos y funcionando correctamente."
     fi
