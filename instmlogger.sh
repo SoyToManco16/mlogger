@@ -162,7 +162,8 @@ else
     echo "El servicio ya está habilitado."
 fi
 
-systemctl start mlogger.service
+sudo chown root:root /var/log/mlog.log
+sudo chmod 644 /var/log/mlog.log
 
 # Configuración de logrotate para el archivo de log de mlogger
 echo "Configurando logrotate para mlog"
@@ -179,6 +180,8 @@ EOF
 
 # Ejecutar logrotate manualmente para probar la configuración
 logrotate "$logrotate_conf"
+
+systemctl start mlogger.service
 
 echo "Instalación completada, disfrute de mlogger :)"
 
