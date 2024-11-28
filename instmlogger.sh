@@ -9,7 +9,6 @@ mbs="mloggerbackups.sh"
 etcm="/etc/mlogger"
 mscripts="$etcm/scripts"
 mbackups="$etcm/backups"
-sclc="servcatlog.conf"
 readme="Documentación"
 cjp="/etc/cron.d/mloggerbackups-cron"   # Cronjob copias de seguridad
 sourcedest="$mbackups"                  # Ruta del destino de las backups
@@ -29,7 +28,6 @@ mkdir -p "$etcm" "$mscripts" "$mbackups"  # Crear carpetas necesarias
 
 # Copiar archivos a las rutas correspondientes
 cp "$readme" "$etcm" || { echo "Error al copiar README.txt"; exit 1; }
-cp "$sclc" "$etcm" || { echo "Error al copiar servcatlog.conf"; exit 1; }
 cp mlogger.sh "$ulbp" || { echo "Error al copiar mlogger.sh"; exit 1; }
 
 # Dar permisos de ejecución
