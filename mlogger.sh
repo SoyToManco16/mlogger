@@ -156,7 +156,7 @@ function RAMUsage {
     asunto="ERROR CRÍTICO: USO DE RAM"
     mensaje="El uso de la RAM ha sobrepasado el límite del 90%, ve cagando leches"
     mlogmail "$asunto" "$mensaje"
-       
+
     # Avisar por syslog
         mloggerflags 1 "ALERT: El uso de la memoria ha superado el 90%!!"
     elif [[ $ram_usage -gt 80 ]]; then
