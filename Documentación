@@ -1,58 +1,131 @@
 MLOGGER
 Proyecto realizado por MIGUEL HERNÁNDEZ ANDREU
 
-Introducción.
-Mlogger es un servicio creado por mi el cual ejecuta un script que he desarrollado para monitorear distintos eventos, registros y el seguimiento continuado de recursos importantes del sistema como el uso de la CPU o la memoria RAM.
+Introducción
+Mlogger es un servicio desarrollado para monitorear de manera eficiente y continua diversos eventos, registros y recursos críticos del sistema. A través de un script automatizado, Mlogger permite obtener información sobre el rendimiento de la CPU, la memoria RAM, el espacio en disco, y otros aspectos vitales del sistema. El servicio también realiza un seguimiento continuo de eventos como el uso de la red, el monitoreo de servicios y la verificación de las copias de seguridad.
+Este servicio está diseñado para ser flexible y escalable, permitiendo configurar prioridades de monitoreo según la criticidad de los recursos y eventos a supervisar.
 
-¿Cómo monitorea mlogger el sistema?
-Mlogger se basa en un abanico de prioridades a la hora de monitorear distintos eventos o recursos del sistema.
-Existen prioridades altas, medias y bajas y a parte prioridades opcionales.
+¿Cómo monitorea Mlogger el sistema?
+Mlogger emplea una estructura de prioridades para definir qué eventos o recursos del sistema requieren más atención y seguimiento. Estas prioridades son las siguientes:
 
-PRIORIDAD ALTA: 
-Uso de la CPU. 
-Uso de la Memoria RAM (MiB Mem). 
-Espacio en disco. 
-Servicios críticos. 
-Supervisión de logs del sistema como (syslog, dmesg, audit.log…). 
-Copias de seguridad.
+PRIORIDAD ALTA:
+Uso de la CPU: Monitoreo del porcentaje de CPU en uso en tiempo real.
+Uso de la Memoria RAM (MiB Mem): Medición del consumo de la memoria RAM en megabytes.
+Espacio en disco: Verificación del espacio disponible en los discos duros del sistema.
+Servicios críticos: Monitoreo de los servicios esenciales del sistema (como SSH, Apache, etc.) para asegurar que estén activos.
+Supervisión de logs del sistema: Revisión continua de logs críticos como syslog, dmesg, y audit.log para detectar posibles problemas o errores.
+Copias de seguridad: Verificación del estado de las copias de seguridad para asegurar que se realicen correctamente.
 
 PRIORIDAD MEDIA:
-Uso de la SWAP.
-Uso de la RED. 
-Procesos que más CPU y MEM consumen. 
-Conexiones entrantes y salientes. 
-Puertos abiertos y en funcionamiento nmap.
+Uso de la SWAP: Verificación del uso de la memoria virtual (SWAP) en el sistema.
+Uso de la RED: Monitoreo del tráfico de red, tanto de entrada como de salida.
+Procesos que más CPU y MEM consumen: Identificación de los procesos que están utilizando más recursos del sistema.
+Conexiones entrantes y salientes: Registro de las conexiones de red activas para detectar actividades inusuales.
+Puertos abiertos y en funcionamiento (nmap): Comprobación de los puertos abiertos en el sistema para identificar posibles vulnerabilidades.
 
 PRIORIDAD BAJA:
-Check para ver si las copias de seguridad están vivas (Activable)
-Tiempo del servidor activo.
-Monitoreo de usuarios conectados.
-
+Check para ver si las copias de seguridad están vivas (Activable): Un chequeo adicional para validar que las copias de seguridad han sido exitosas.
+Tiempo del servidor activo: Verificación de cuánto tiempo lleva el sistema en funcionamiento.
+Monitoreo de usuarios conectados: Registro y monitoreo de los usuarios que están actualmente conectados al sistema.
 
 ¿Cómo funciona el script?
-El script implementado para mlogger ejecuta funciones de monitoreo de manera continua utilizando temporizadores, capturando tanto eventos críticos como eventos de menor prioridad. Además, el script evalúa la carga de recursos del sistema, utilizando herramientas como top para analizar el rendimiento y el uso de recursos en tiempo real.
+El script de Mlogger se ejecuta de manera continua en segundo plano, utilizando temporizadores que ejecutan funciones de monitoreo de acuerdo con las prioridades establecidas. Este script captura eventos tanto de alta como de baja prioridad, y evalúa de forma constante el estado de los recursos del sistema utilizando herramientas como top para analizar el rendimiento y uso de recursos en tiempo real.
+El script también genera logs de eventos, los cuales son almacenados en un archivo llamado mlog. Los logs incluyen tanto eventos críticos (como la caída de un servicio) como eventos de menor relevancia (como el uso de la SWAP), lo que permite obtener un panorama completo del estado del sistema.
+
 
 ¿Cómo implementamos el servicio en el SO?
-En el zip donde viene el script mlogger.sh viene otro script de instalación que debemos de ejecutar como root para su correcto funcionamiento, este moverá el script a /usr/local/bin y creará el fichero con el servicio que implementará en /etc/systemd/system y habilitará para que se inicie siempre que encendamos nuestro sistema.
+Para implementar Mlogger como un servicio en el sistema operativo, se debe seguir el siguiente procedimiento:
+1 Descomprimir el zip.
+2 Dar permisos de ejecución a el archivo “instmlogger.sh”: chmod +x 
+3 Ejecutarlo con ./instmlogger.sh
+4 Completar la instalación siguiendo las instrucciones o recomendaciones de mlogger.
 
-Para la correcta ejecución:
-Descomprimir el .zip en una carpeta.
-Nos situamos en la carpeta con cd /ruta/a/carpeta.
-Como root, chmod +x instmlogger.sh
-Lo ejecutamos ./instmlogger.sh
+Durante la instalación nos encontraremos con lo siguiente:
+Se nos preguntará si queremos implementar la función de copias de seguridad, una función muy simple que nos preguntará por un directorio del cual queremos generar las copias de seguridad introduciendo su ruta completa /ruta/al/dir.
+Esto se consigue moviendo un script llamado mloggerbackups.sh a la carpeta de scripts de /etc/mlogger que el propio instalador genera.
+Todo esto se ejecuta mediante un cronjob que se creará cuando le demos a que sí
+Luego nos preguntará por un email para enviarnos correos en caso de emergencia y más tarde si no tenemos instalado msmtp nos lo instalará y configurará para poder tener alertas en nuestro mail.
+Y por último nos preguntará si queremos poner un recordatorio a el administrador para que revise mlogger con at.
+La instalación configura logrotate para evitar un colapso con los logs.
 
-¿Y qué pasaría si queremos eliminar mlogger de nuestro sistema?
-Si queremos eliminar por completo mlogger del sistema, tenemos otro archivo en el .zip llamado “uninstmlogger.sh”, a el igual que el instalador, solo debemos de seguir los mismos pasos pero con este archivo, esto borrará el script del sistema, eliminará el servicio (deteniendolo primeramente) y el archivo residual mlog que quedará se renombrará a mlog.old, si desinstalamos el servicio repetidas veces no supondrá un problema porque se crearán distintos ficheros mlog.old del 1 hasta el infinito.
 
-¿Qué herramientas usa mlogger para trabajar?
-Herramientas para el monitoreo de la red: ifstat, ping, nmap
-Herramientas para monitoreo de CPU: top, lscpu, /proc/stat
-Herramientas para monitoreo de RAM: top, lsmem, /proc/meminfo
-Herramientas para monitoreo de Almacenamiento: df, lsblk
-Herramientas para mostrar información del SO: hostnamectl
-Herramientas para monitorear servicios: systemctl
-Herramientas para monitorear la SWAP: free
-Herramientas para monitorear procesos: ps
-Herramientas para monitorear tiempo activo del servidor: uptime
-Herramientas para monitorear usuarios: who
+
+
+¿Y qué pasaría si queremos eliminar Mlogger del sistema?
+Si deseas eliminar Mlogger del sistema, puedes utilizar el script de desinstalación proporcionado en el archivo .zip. El archivo se llama uninstmlogger.sh y el proceso es igual al de la instalación, debemos de ejecutarlo y nos preguntará si queremos eliminar todo el rastro que haya podido dejar en el sistema menos msmtp.
+
+Este script llevará a cabo los siguientes pasos:
+Detendrá el servicio Mlogger.
+Eliminará el archivo del script del sistema.
+Eliminará el servicio de systemd.
+Renombrará el archivo de logs residual (mlog) a mlog.old. Si se ejecuta varias veces, se irán creando archivos con nombres como mlog.old1, mlog.old2, etc.
+
+¿Qué herramientas usa Mlogger para trabajar?
+Mlogger se basa en una serie de herramientas estándar para obtener información detallada del sistema. Las herramientas utilizadas son las siguientes:
+
+Herramientas para monitoreo de la red:
+ifstat: para mostrar estadísticas sobre la interfaz de red.
+ping: para comprobar la conectividad con otros sistemas en la red.
+nmap: para escanear puertos y verificar qué servicios están corriendo en el sistema.
+
+Herramientas para monitoreo de la CPU:
+top: para mostrar el uso de la CPU en tiempo real.
+lscpu: para obtener información detallada sobre la arquitectura de la CPU.
+/proc/stat: para acceder a estadísticas sobre la CPU directamente desde el sistema de archivos.
+
+Herramientas para monitoreo de la RAM:
+top: para monitorear el uso de la memoria en tiempo real.
+lsmem: para obtener detalles sobre la memoria física del sistema.
+/proc/meminfo: para acceder a estadísticas sobre el uso de la memoria.
+
+Herramientas para monitoreo del almacenamiento:
+df: para mostrar el espacio en disco disponible.
+lsblk: para mostrar la lista de dispositivos de almacenamiento conectados y sus particiones.
+
+Herramientas para monitoreo de servicios:
+systemctl: para comprobar el estado de los servicios del sistema.
+servcatlog.conf: Este fichero de configuración que podemos encontrar en /etc/mlogger es un fichero el cual podemos configurar nosotros mismos
+para poder flexibilizar el uso de la función que vigila los servicios, de esta manera nosotros daremos prioridad a los servicios que de verdad nos importen.
+
+Herramientas para monitoreo de la SWAP:
+free: para mostrar el uso de la memoria física y de SWAP.
+
+Herramientas para monitoreo de procesos:
+ps: para mostrar información sobre los procesos en ejecución en el sistema.
+
+Herramientas para monitoreo del tiempo activo del servidor:
+uptime: para mostrar el tiempo que el sistema ha estado en funcionamiento desde el último reinicio.
+
+Herramientas para monitoreo de usuarios conectados:
+who: para listar los usuarios que están actualmente conectados al sistema.
+
+¿Por qué mlogger monitorea el sistema de esta manera?
+Y bien respondiendo a esta pregunta anterior mlogger no está diseñado para actuar sobre servidores o equipos muy importantes debido a que es un proyecto temporal, de todos modos podemos cambiar las prioridades de la ejecución de las funciones
+desde el script que podemos encontrar en /usr/local/bin de esta manera podemos adaptarlo a nuestro uso.
+
+
+
+
+
+
+
+
+Observaciones extras sobre por qué unos tiempos y no otros.
+Tras una larga búsqueda por internet e indagación en varias páginas web he llegado a la conclusión de que los eventos más importantes a vigilar en un servidor son:
+Uso excesivo de recursos como puede ser: CPU, RAM, SWAP, ALMACENAMIENTO etc…
+Caída de servicios o procesos importantes dependiendo del tipo de servidor en el que estemos.
+Ataques de seguridad como intrusiones no deseadas.
+Fallos en la red.
+Problemas en tareas o cronjobs preparados.
+Sincronización de la hora errónea.
+Problemas de configuración.
+Problemas con certificados.
+Y mil cosas más, mlogger reúne lo más importante de una manera justa y compacta centrándose en el uso de recursos y en la red.
+
+
+
+Conclusión
+Mlogger es una solución robusta y flexible para la monitorización continua de recursos y eventos en un sistema Linux.
+Gracias a su capacidad de priorizar diferentes eventos y recursos, permite a los administradores de sistemas centrarse en los problemas más críticos y tomar decisiones informadas para mantener el sistema en buen estado.
+
 
