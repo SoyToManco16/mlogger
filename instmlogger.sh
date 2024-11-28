@@ -64,6 +64,7 @@ if [[ "$enablebackups" == "s" || "$enablebackups" == "S" ]]; then
     else
         echo "El cronjob ya está configurado."
     fi
+fi
 
 # Solicitar al usuario habilitar los avisos por email
 read -p "¿Desea habilitar los avisos por email ante eventos críticos? (s/n): " ansmail
