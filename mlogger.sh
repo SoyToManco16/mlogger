@@ -184,23 +184,23 @@ function DiskUsage {
 # Función para chequear los servicios del sistema mediante un archivo de configuración medido por niveles de criticidad
 function checkCritSrvcs {
     # Variables para el checker de servicios
-    declare -A servcatlog
-    CONFIG_FILE="/etc/mlogger/servcatlog.conf"
+    declare -A servcatlog=(
+        [cron]=0
+        [rsyslog]=0
+        [systemd-journald]=0
+        [ufw]=0
+        [mysql]=1
+        [apache2]=1
+        [apparmor]=1
+        [zabbix-server]=1
+        [zabbix-agent]=1
+        [docker]=2
+        [snapd]=2
+        [cups]=2
+    )
     active_services=()  # Array para almacenar servicios activos
 
-    # Verificar si el archivo de configuración existe
-    if [[ ! -f "$CONFIG_FILE" ]]; then
-        mloggerflags 3 "ERROR: El archivo de configuración $CONFIG_FILE no se encuentra. No se están analizando los servicios." 
-        exit 1
-    fi
-
-    # Leer el archivo línea por línea y cargar los servicios y su criticidad en el array
-    while IFS='=' read -r service level; do
-        # Ignorar líneas vacías o comentarios
-        [[ -z "$service" || "$service" =~ ^# ]] && continue
-        servcatlog["$service"]=$level
-    done < "$CONFIG_FILE"
-
+    # Iterar sobre los servicios definidos en el array asociativo
     for service in "${!servcatlog[@]}"; do
         local level="${servcatlog[$service]}"
 
@@ -218,10 +218,10 @@ function checkCritSrvcs {
             case "$level" in
                 0)  # Avisar por syslog
                     mloggerflags 0 "CRITICAL: El servicio $service está detenido o fallando."
-		    # Avisar por mail
-    	    		asunto="SERVICIO CAIDO O FAILED"
-            		mensaje="El servicio $service se ha caido o está fallando, acuda a el servidor"
-            		mlogmail "$asunto" "$mensaje"
+                    # Avisar por mail
+                    asunto="SERVICIO CAIDO O FAILED"
+                    mensaje="El servicio $service se ha caído o está fallando, acuda al servidor"
+                    mlogmail "$asunto" "$mensaje"
                     ;;
                 1)
                     mloggerflags 1 "ALERT: El servicio $service no está activo."
