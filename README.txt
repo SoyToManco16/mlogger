@@ -9,6 +9,7 @@ y las guardará en programa tar.gz.
 Si queremos habilitar los avisos por correo electrónico se nos pedirá un correo a la hora de la instalación.
 Por ahora solo soportamos correos basados en gmail :(.
 Usamos msmtp, aunque esta opción puede ser evitada y tan solo instalar el servicio.
+Recuerda revisar SPAM ya que msmtp es detectado como spam al ser un servicio de terceros.
 
 Para más detalles lea la documentación del proyecto.
 Con cariño de SoyToManco16 :)
