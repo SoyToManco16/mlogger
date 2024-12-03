@@ -14,3 +14,5 @@ Recuerda revisar SPAM ya que msmtp es detectado como spam al ser un servicio de 
 Para más detalles lea la documentación del proyecto.
 Con cariño de SoyToManco16 :)
 
+ACTUALIZACIÓN: Si el servicio no funciona correctamente se debe a un error en el script de instalación:
+Quitar el -y de después de apt install "-y", no se instalan los paquetes necesarios.
